@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { User, Camera, Shield, History, MapPin } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Wallet, ShoppingBag, ShieldCheck, Settings, User, X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const Profile = () => {
-  const { t, userProfile, updateProfile, sales, products, role } = useAppContext();
+  const { t, userProfile, updateProfile, role, wallets, orders } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(userProfile.name);
   const [bio, setBio] = useState(userProfile.bio);
@@ -13,135 +14,133 @@ const Profile = () => {
     setIsEditing(false);
   };
 
-  const myPurchases = products.filter(p => p.status === 'bought');
-  const mySales = sales;
+  const userOrders = orders.filter(o => o.status !== 'pending');
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-[#e2e0d8] overflow-hidden">
-        {/* Cover Photo */}
-        <div className="h-48 bg-gradient-to-r from-[#2c3b29] to-[#4a5d46] relative">
-          <div className="absolute -bottom-16 left-12">
-            <div className="w-32 h-32 rounded-3xl bg-white p-1 shadow-lg border border-[#e2e0d8]">
-              <div className="w-full h-full rounded-2xl bg-[#f0eee4] flex items-center justify-center text-[var(--color-brand-accent)]">
-                {userProfile.avatar ? (
-                  <img src={userProfile.avatar} alt="Avatar" className="w-full h-full object-cover rounded-2xl" />
-                ) : (
-                  <User size={48} />
-                )}
+      {/* Header Card */}
+      <div className="bg-white rounded-[3rem] shadow-sm border border-[#e2e0d8] overflow-hidden mb-8">
+        <div className="h-32 bg-[var(--color-brand-accent)] relative">
+          <div className="absolute -bottom-12 left-8">
+            <div className="w-24 h-24 rounded-3xl bg-white p-1 shadow-lg border border-[#e2e0d8]">
+              <div className="w-full h-full rounded-[1.25rem] bg-[#f0eee4] flex items-center justify-center text-4xl font-serif text-[var(--color-brand-accent)] overflow-hidden">
+                {userProfile.avatar ? <img src={userProfile.avatar} alt="" /> : userProfile.name.charAt(0) || 'V'}
               </div>
-              <button className="absolute bottom-2 right-2 bg-white p-2 rounded-xl shadow-md border border-[#e2e0d8] text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-accent)] transition-colors">
-                <Camera size={16} />
-              </button>
             </div>
           </div>
         </div>
+        
+        <div className="pt-16 pb-8 px-8 flex justify-between items-start">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-3">
+              <h2 className="text-3xl font-serif font-bold text-[var(--color-brand-text)] italic">
+                {userProfile.name || "VakaHub User"}
+              </h2>
+              <span className="bg-[#ebe8de] text-[var(--color-brand-text-muted)] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-[#d1cec1]">
+                {role === 'admin' ? "Merchant" : "Buyer"}
+              </span>
+            </div>
+            <p className="text-[var(--color-brand-text-muted)] text-sm max-w-sm">{userProfile.bio || "No bio yet."}</p>
+          </div>
+          <button 
+            onClick={() => setIsEditing(!isEditing)}
+            className="px-6 py-2 rounded-full border border-[#e2e0d8] text-sm font-medium hover:bg-[#fcfcfa] transition-colors"
+          >
+            {isEditing ? "Cancel" : "Edit Profile"}
+          </button>
+        </div>
 
-        <div className="pt-20 px-12 pb-12">
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              {isEditing ? (
-                <div className="space-y-4">
-                  <input 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your Name"
-                    className="text-3xl font-serif bg-[#fcfcfa] border border-[#e2e0d8] p-2 rounded-xl focus:outline-none focus:border-[var(--color-brand-accent)] w-full"
-                  />
-                  <textarea 
-                    value={bio} 
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Short bio..."
-                    className="text-[var(--color-brand-text-muted)] bg-[#fcfcfa] border border-[#e2e0d8] p-3 rounded-xl focus:outline-none focus:border-[var(--color-brand-accent)] w-full h-24"
-                  />
-                </div>
-              ) : (
-                <>
-                  <h1 className="text-4xl font-serif text-[var(--color-brand-text)]">{userProfile.name || 'Anonymous Merchant'}</h1>
-                  <p className="text-[var(--color-brand-text-muted)] mt-2 max-w-md">{userProfile.bio || 'Building trust in the local marketplace.'}</p>
-                </>
-              )}
-              
-              <div className="flex items-center space-x-4 mt-6 text-sm text-[var(--color-brand-text-muted)]">
-                <div className="flex items-center space-x-1">
-                  <MapPin size={14} />
-                  <span>Harare, Zimbabwe</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Shield size={14} className="text-[#2e7d32]" />
-                  <span className="text-[#2e7d32] font-medium">Verified Account</span>
-                </div>
+        {isEditing && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="px-8 pb-8 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest mb-1">Display Name</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full p-3 rounded-xl border border-[#e2e0d8] focus:border-[var(--color-brand-accent)] outline-none" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest mb-1">Short Bio</label>
+                <input type="text" value={bio} onChange={(e) => setBio(e.target.value)} className="w-full p-3 rounded-xl border border-[#e2e0d8] focus:border-[var(--color-brand-accent)] outline-none" />
               </div>
             </div>
+            <button onClick={handleSave} className="bg-[var(--color-brand-accent)] text-white px-8 py-3 rounded-xl font-bold text-sm">Save Changes</button>
+          </motion.div>
+        )}
+      </div>
 
-            <button 
-              onClick={isEditing ? handleSave : () => setIsEditing(true)}
-              className="px-6 py-2.5 rounded-full bg-[#f0eee4] text-[var(--color-brand-text)] font-medium hover:bg-[#e2e0d8] transition-colors"
-            >
-              {isEditing ? t('saveProfile') : t('editProfile')}
-            </button>
-          </div>
-
-          <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl mb-12 flex items-start space-x-3">
-            <Shield size={20} className="text-rose-500 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-rose-700">{t('accountLimit')}</p>
-              <p className="text-xs text-rose-600 mt-0.5">VakaHub uses biometric-linked device IDs to ensure platform integrity.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Wallet Section */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-[#2c3b29] text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+            <div className="flex items-center space-x-2 text-white/60 text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+              <Wallet size={12} />
+              <span>Available Wallet</span>
             </div>
+            <h3 className="text-4xl font-serif font-bold italic">
+              ${role === 'admin' ? wallets.merchant.toFixed(2) : wallets.buyer.toFixed(2)}
+            </h3>
+            <p className="text-white/40 text-[10px] mt-4">Safe & Tax-Free Transactions</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <h3 className="font-serif text-2xl text-[var(--color-brand-text)] flex items-center space-x-2">
-                <History size={20} />
-                <span>{role === 'user' ? t('orders') : t('recentTransactions')}</span>
-              </h3>
+          {role === 'user' && wallets.pending > 0 && (
+            <div className="bg-amber-50 border border-amber-100 p-6 rounded-[2rem]">
+              <div className="flex items-center space-x-2 text-amber-700 text-[10px] font-bold uppercase tracking-widest mb-1">
+                <ShieldCheck size={12} />
+                <span>Pending Escrow</span>
+              </div>
+              <p className="text-2xl font-bold text-amber-800">${wallets.pending.toFixed(2)}</p>
+            </div>
+          )}
+        </div>
+
+        {/* History / Features Section */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-[2.5rem] border border-[#e2e0d8] p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-serif font-bold italic">{role === 'admin' ? "Business Settings" : "Order History"}</h3>
+            </div>
+
+            {role === 'user' ? (
               <div className="space-y-4">
-                {(role === 'user' ? myPurchases : mySales).length > 0 ? (
-                  (role === 'user' ? myPurchases : mySales).map((item, i) => (
-                    <div key={i} className="p-4 bg-[#fcfcfa] rounded-2xl border border-[#e2e0d8] flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-white rounded-xl border border-[#e2e0d8] overflow-hidden">
-                          <img src={item.image} alt="" className="w-full h-full object-cover" />
+                {userOrders.length === 0 ? (
+                  <p className="text-center py-10 text-[var(--color-brand-text-muted)] text-sm italic">No past orders found.</p>
+                ) : (
+                  userOrders.map(order => (
+                    <div key={order.id} className="flex justify-between items-center p-4 rounded-2xl border border-[#f0eee4] hover:border-[#e2e0d8] transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#fcfcfa] flex items-center justify-center text-[var(--color-brand-accent)] border border-[#e2e0d8]">
+                          <ShoppingBag size={18} />
                         </div>
                         <div>
-                          <p className="font-medium text-[var(--color-brand-text)]">{item.name || item.product}</p>
-                          <p className="text-xs text-[var(--color-brand-text-muted)]">{new Date(item.boughtAt || item.date).toLocaleDateString()}</p>
+                          <p className="text-sm font-bold">{order.id}</p>
+                          <p className="text-[10px] text-[var(--color-brand-text-muted)]">{new Date(order.date).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <p className="font-bold text-[var(--color-brand-accent)]">${item.price || item.amount}</p>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-[var(--color-brand-accent)]">${order.totalUsd.toFixed(2)}</p>
+                        <span className="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase">Completed</span>
+                      </div>
                     </div>
                   ))
-                ) : (
-                  <p className="text-sm text-[var(--color-brand-text-muted)] italic">No history yet.</p>
                 )}
               </div>
-            </div>
-
-            <div className="bg-[#f0eee4] rounded-[2rem] p-8">
-              <h4 className="font-serif text-xl mb-4">Merchant Score</h4>
-              <div className="flex items-end space-x-2 mb-6">
-                <span className="text-5xl font-serif text-[var(--color-brand-accent)]">98</span>
-                <span className="text-lg text-[var(--color-brand-text-muted)] mb-1">/ 100</span>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: "Add Product", tab: 'products', icon: <ShoppingBag size={20} /> },
+                  { label: "View Orders", tab: 'orders', icon: <Wallet size={20} /> },
+                  { label: "Business Ads", tab: 'advertise', icon: <Settings size={20} /> },
+                  { label: "Support Chat", tab: 'chatbot', icon: <User size={20} /> },
+                ].map((item, i) => (
+                  <button key={i} className="flex flex-col items-center justify-center p-6 rounded-[2rem] border border-[#e2e0d8] hover:border-[var(--color-brand-accent)] hover:bg-[#fcfcfa] transition-all group">
+                    <div className="text-[var(--color-brand-text-muted)] group-hover:text-[var(--color-brand-accent)] transition-colors mb-3">
+                      {item.icon}
+                    </div>
+                    <span className="text-xs font-bold text-[var(--color-brand-text-muted)] group-hover:text-[var(--color-brand-text)] uppercase tracking-wider">{item.label}</span>
+                  </button>
+                ))}
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between text-xs">
-                  <span className="text-[var(--color-brand-text-muted)]">Reliability</span>
-                  <span className="font-medium">High</span>
-                </div>
-                <div className="w-full h-2 bg-white rounded-full overflow-hidden">
-                  <div className="h-full bg-[var(--color-brand-accent)] w-[92%]"></div>
-                </div>
-                <div className="flex justify-between text-xs pt-2">
-                  <span className="text-[var(--color-brand-text-muted)]">Release Time</span>
-                  <span className="font-medium">&lt; 2 hours</span>
-                </div>
-                <div className="w-full h-2 bg-white rounded-full overflow-hidden">
-                  <div className="h-full bg-[var(--color-brand-accent)] w-[85%]"></div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

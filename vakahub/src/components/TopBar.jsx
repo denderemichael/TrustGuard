@@ -1,16 +1,14 @@
 import React from 'react';
-import { Search, Heart, ShoppingBag, LogOut, Settings, User } from 'lucide-react';
+import { ShoppingBag, Settings, User } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
-const TopBar = ({ currentTab, setCurrentTab }) => {
-  const { t, role, resetApp } = useAppContext();
+const TopBar = () => {
+  const { t, role, products, cart, currentTab, setCurrentTab } = useAppContext();
 
   const adminTabs = [
     { id: 'home', label: t('dashboard') },
-    { id: 'record', label: t('recordSale') },
     { id: 'products', label: t('products') },
-    { id: 'customers', label: t('customers') },
-    { id: 'reports', label: t('reports') },
+    { id: 'orders', label: t('orders') },
     { id: 'advertise', label: t('advertise') },
     { id: 'profile', label: t('profile') },
   ];
@@ -18,9 +16,9 @@ const TopBar = ({ currentTab, setCurrentTab }) => {
   const userTabs = [
     { id: 'home', label: t('home') },
     { id: 'products', label: t('collections') },
-    { id: 'profile', label: t('profile') },
-    { id: 'about', label: t('about') },
+    { id: 'orders', label: t('myOrders') },
     { id: 'contact', label: t('contact') },
+    { id: 'profile', label: t('profile') },
   ];
 
   const tabs = role === 'admin' ? adminTabs : userTabs;
@@ -29,6 +27,14 @@ const TopBar = ({ currentTab, setCurrentTab }) => {
     <nav className="w-full bg-[var(--color-brand-bg)] border-b border-[#e2e0d8] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
+          {/* Left: Logo */}
+          <div className="flex-shrink-0 cursor-pointer flex items-center space-x-2" onClick={() => setCurrentTab('home')}>
+            <span className="font-serif italic text-2xl font-bold text-[var(--color-brand-text)] tracking-tight">
+              VakaHub
+            </span>
+          </div>
+
+          {/* Center: Tabs */}
           <div className="hidden md:flex space-x-8 items-center">
             {tabs.map((tab) => (
               <button
@@ -45,33 +51,37 @@ const TopBar = ({ currentTab, setCurrentTab }) => {
             ))}
           </div>
 
-          <div className="flex-shrink-0 flex items-center justify-center flex-1 md:flex-none cursor-pointer" onClick={() => setCurrentTab('home')}>
-            <span className="font-serif italic text-3xl font-semibold text-[var(--color-brand-text)] tracking-wider">
-              {role === 'admin' ? t('vakaHubAdmin') : t('vakaHubShop')}
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-6 text-[var(--color-brand-text)]">
-            <button 
-              onClick={() => setCurrentTab('profile')} 
-              className={`hover:text-[var(--color-brand-accent)] transition-colors ${currentTab === 'profile' ? 'text-[var(--color-brand-accent)]' : ''}`}
-            >
-              <User size={20} strokeWidth={1.5} />
-            </button>
+          {/* Right: Actions */}
+          <div className="flex items-center space-x-5">
+            {role === 'user' && (
+              <button 
+                onClick={() => setCurrentTab('cart')} 
+                className="relative p-2 text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-accent)] transition-colors"
+              >
+                <ShoppingBag size={22} strokeWidth={1.5} />
+                {cart && cart.length > 0 && (
+                  <span className="absolute top-0 right-0 bg-[var(--color-brand-accent)] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
+            )}
             
-            {role === 'user' ? (
-              <>
-                <button className="hover:text-[var(--color-brand-accent)] transition-colors"><Search size={20} strokeWidth={1.5} /></button>
-                <button className="hover:text-[var(--color-brand-accent)] transition-colors relative">
-                  <ShoppingBag size={20} strokeWidth={1.5} />
-                  <span className="absolute -top-1 -right-2 bg-[var(--color-brand-accent)] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => setCurrentTab('settings')} className="hover:text-[var(--color-brand-accent)] transition-colors"><Settings size={20} strokeWidth={1.5} /></button>
-                <button onClick={resetApp} className="hover:text-[var(--color-brand-accent)] transition-colors"><LogOut size={20} strokeWidth={1.5} /></button>
-              </>
+            <button 
+              onClick={() => setCurrentTab('profile')}
+              className={`p-2 rounded-full border transition-all ${
+                currentTab === 'profile' 
+                  ? 'border-[var(--color-brand-accent)] text-[var(--color-brand-accent)]' 
+                  : 'border-transparent text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-text)]'
+              }`}
+            >
+              <User size={22} strokeWidth={1.5} />
+            </button>
+
+            {role === 'admin' && (
+              <button onClick={() => setCurrentTab('settings')} className="p-2 text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-text)]">
+                <Settings size={22} strokeWidth={1.5} />
+              </button>
             )}
           </div>
         </div>
