@@ -103,22 +103,43 @@ const Profile = () => {
             {role === 'user' ? (
               <div className="space-y-4">
                 {userOrders.length === 0 ? (
-                  <p className="text-center py-10 text-[var(--color-brand-text-muted)] text-sm italic">No past orders found.</p>
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-[#fcfcfa] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#e2e0d8]">
+                      <ShoppingBag size={24} className="text-[#d1cec1]" />
+                    </div>
+                    <p className="text-[var(--color-brand-text-muted)] text-sm italic">No past orders found.</p>
+                  </div>
                 ) : (
                   userOrders.map(order => (
-                    <div key={order.id} className="flex justify-between items-center p-4 rounded-2xl border border-[#f0eee4] hover:border-[#e2e0d8] transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#fcfcfa] flex items-center justify-center text-[var(--color-brand-accent)] border border-[#e2e0d8]">
-                          <ShoppingBag size={18} />
+                    <div key={order.id} className="p-6 rounded-[2rem] border border-[#f0eee4] hover:border-[#e2e0d8] hover:shadow-sm transition-all bg-[#fcfcfa]/50">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[var(--color-brand-accent)] border border-[#e2e0d8] shadow-sm">
+                            <ShieldCheck size={20} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-[var(--color-brand-text)]">{order.id}</p>
+                            <p className="text-[10px] text-[var(--color-brand-text-muted)] font-bold uppercase tracking-widest">{new Date(order.date).toLocaleDateString()}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold">{order.id}</p>
-                          <p className="text-[10px] text-[var(--color-brand-text-muted)]">{new Date(order.date).toLocaleDateString()}</p>
+                        <div className="text-right">
+                          <p className="text-lg font-serif font-bold text-[var(--color-brand-accent)]">${order.totalUsd.toFixed(2)}</p>
+                          <span className={`text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${
+                            order.status === 'released' ? 'bg-[#e8faed] text-[#2e7d32]' : 'bg-[#fff8e1] text-[#f57f17]'
+                          }`}>
+                            {order.status === 'released' ? "Released" : "In Escrow"}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-[var(--color-brand-accent)]">${order.totalUsd.toFixed(2)}</p>
-                        <span className="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase">Completed</span>
+                      <div className="border-t border-[#f0eee4] pt-4">
+                        <p className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest mb-2">Items Bought:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {order.items.map((item, idx) => (
+                            <span key={idx} className="bg-white border border-[#e2e0d8] px-3 py-1 rounded-lg text-xs text-[var(--color-brand-text)] shadow-sm">
+                              {item.name}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ))

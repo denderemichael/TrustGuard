@@ -50,13 +50,21 @@ const Products = () => {
     setShowForm(true);
   };
 
+  const [activeCategory, setActiveCategory] = useState('All');
+  
+  const filteredProducts = activeCategory === 'All' 
+    ? products 
+    : products.filter(p => p.category === activeCategory);
+
+  const categories = ['All', 'Groceries', 'Health', 'Art', 'Clothing', 'Hair', 'Makeup', 'Electronics'];
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Page Header */}
-      <div className="flex justify-between items-end mb-12 border-b border-[#e2e0d8] pb-8">
+      <div className="flex justify-between items-end mb-8 border-b border-[#e2e0d8] pb-8">
         <div>
-          <h2 className="text-5xl font-serif text-[var(--color-brand-text)] italic">{role === 'admin' ? "Manage Catalog" : "Our Collections"}</h2>
-          <p className="text-[var(--color-brand-text-muted)] mt-2">Premium Zimbabwean goods, verified & secured.</p>
+          <h2 className="text-5xl font-serif text-[var(--color-brand-text)] italic">{role === 'admin' ? "Manage Catalog" : "Marketplace Sectors"}</h2>
+          <p className="text-[var(--color-brand-text-muted)] mt-2">Discover premium goods across multiple local sectors.</p>
         </div>
         {role === 'admin' && (
           <button 
@@ -67,6 +75,23 @@ const Products = () => {
             <span>{t('addProduct')}</span>
           </button>
         )}
+      </div>
+
+      {/* Sector Filter */}
+      <div className="flex flex-wrap gap-3 mb-12">
+        {categories.map(c => (
+          <button
+            key={c}
+            onClick={() => setActiveCategory(c)}
+            className={`px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all border ${
+              activeCategory === c 
+                ? 'bg-[#2c3b29] text-white border-[#2c3b29] shadow-md' 
+                : 'bg-white text-[var(--color-brand-text-muted)] border-[#e2e0d8] hover:border-[var(--color-brand-accent)]'
+            }`}
+          >
+            {c}
+          </button>
+        ))}
       </div>
 
       {/* Add/Edit Form Modal */}
@@ -92,7 +117,7 @@ const Products = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Category</label>
                   <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-4 rounded-2xl focus:border-[var(--color-brand-accent)] outline-none appearance-none">
-                    {['Groceries', 'Health', 'Art', 'Clothing'].map(c => <option key={c} value={c}>{c}</option>)}
+                    {['Groceries', 'Health', 'Art', 'Clothing', 'Hair', 'Makeup', 'Electronics'].map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
 
@@ -112,7 +137,7 @@ const Products = () => {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-        {products.map((p) => (
+        {filteredProducts.map((p) => (
           <motion.div 
             key={p.id}
             layout

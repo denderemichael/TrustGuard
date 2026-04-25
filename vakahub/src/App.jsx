@@ -20,8 +20,8 @@ function App() {
   const { language, role, onboarded, currentTab, setCurrentTab } = useAppContext();
 
   if (!language) return <LanguageSelection />;
-  if (!role) return <RoleSelection />;
   if (!onboarded) return <Onboarding />;
+  if (!role) return <RoleSelection />;
 
   const renderTab = () => {
     switch (currentTab) {

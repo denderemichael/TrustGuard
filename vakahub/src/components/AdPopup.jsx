@@ -40,6 +40,14 @@ const AdPopup = () => {
     };
   }, [allAds.length, role]);
 
+  const handleClose = () => {
+    setShow(false);
+    // Reappear after 5 minutes (300,000 ms)
+    setTimeout(() => {
+      setShow(true);
+    }, 300000);
+  };
+
   if (allAds.length === 0 || !show) return null;
 
   const currentAd = allAds[currentIndex];
@@ -78,7 +86,7 @@ const AdPopup = () => {
           </div>
 
           <button 
-            onClick={() => setShow(false)} 
+            onClick={handleClose} 
             className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-1.5 rounded-full transition-colors z-20"
           >
             <X size={14} />

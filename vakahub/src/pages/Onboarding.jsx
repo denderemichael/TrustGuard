@@ -3,40 +3,40 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
-const slides = [
-  {
-    id: 1,
-    title: "Shop Safely in Zimbabwe",
-    desc: "Connect with local traders and merchants with 100% confidence.",
-    image: "https://images.unsplash.com/photo-1534452283744-08cd54092454?auto=format&fit=crop&q=80&w=1200",
-    color: "bg-[#2c3b29]"
-  },
-  {
-    id: 2,
-    title: "Secure Escrow Payments",
-    desc: "Your money is held safely in escrow until you personally inspect and collect your items.",
-    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=1200",
-    color: "bg-[#e5a01d]"
-  },
-  {
-    id: 3,
-    title: "Scan to Confirm",
-    desc: "Simply show your unique QR code to the merchant at handover to release funds instantly.",
-    image: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&q=80&w=1200",
-    color: "bg-amber-600"
-  },
-  {
-    id: 4,
-    title: "Dual Currency Support",
-    desc: "Always see prices in both USD and ZiG. No hidden fees, no confusion.",
-    image: "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&q=80&w=1200",
-    color: "bg-teal-700"
-  }
-];
-
 const Onboarding = () => {
   const { setOnboarded, t } = useAppContext();
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    {
+      id: 1,
+      title: t('slideTitle1'),
+      desc: t('slideDesc1'),
+      image: "https://images.unsplash.com/photo-1534452283744-08cd54092454?auto=format&fit=crop&q=80&w=1200",
+      color: "bg-[#2c3b29]"
+    },
+    {
+      id: 2,
+      title: t('slideTitle2'),
+      desc: t('slideDesc2'),
+      image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=1200",
+      color: "bg-[#e5a01d]"
+    },
+    {
+      id: 3,
+      title: t('slideTitle3'),
+      desc: t('slideDesc3'),
+      image: "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?auto=format&fit=crop&q=80&w=1200",
+      color: "bg-amber-600"
+    },
+    {
+      id: 4,
+      title: t('slideTitle4'),
+      desc: t('slideDesc4'),
+      image: "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&q=80&w=1200",
+      color: "bg-teal-700"
+    }
+  ];
 
   const nextSlide = () => {
     if (currentSlide < slides.length - 1) {

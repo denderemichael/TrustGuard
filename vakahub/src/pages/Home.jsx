@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ShieldCheck, CreditCard, MapPin, Truck, ShoppingBasket, HeartPulse, Palette, Shirt, Scissors, Sparkles, Laptop, LayoutGrid } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const Home = ({ setCurrentTab }) => {
@@ -45,9 +46,51 @@ const Home = ({ setCurrentTab }) => {
 
         {/* Trust badges */}
         <div className="bg-white border-y border-[#e2e0d8]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-wrap justify-center gap-12">
-            {['🛡️ QR Escrow Protected', '💳 EcoCash · Zipit · Cash', '🌍 Local First', '📦 Same-Day Handover'].map(b => (
-              <span key={b} className="text-sm font-medium text-[var(--color-brand-text-muted)]">{b}</span>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-wrap justify-center gap-8 md:gap-16">
+            {[
+              { icon: <ShieldCheck size={20} />, text: 'QR Escrow Protected' },
+              { icon: <CreditCard size={20} />, text: 'EcoCash · Zipit · Cash' },
+              { icon: <MapPin size={20} />, text: 'Local First' },
+              { icon: <Truck size={20} />, text: 'Same-Day Handover' }
+            ].map((b, i) => (
+              <div key={i} className="flex items-center space-x-3 text-[var(--color-brand-text-muted)]">
+                <div className="text-[var(--color-brand-accent)]">{b.icon}</div>
+                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">{b.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Browse by Sector */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="mb-12">
+            <h2 className="text-3xl font-serif text-[var(--color-brand-text)] italic">Browse by Sector</h2>
+            <p className="text-[var(--color-brand-text-muted)] mt-2">Explore specialized local markets across Zimbabwe.</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+            {[
+              { name: 'All', icon: <LayoutGrid size={24} />, color: 'bg-gray-100' },
+              { name: 'Groceries', icon: <ShoppingBasket size={24} />, color: 'bg-emerald-50' },
+              { name: 'Health', icon: <HeartPulse size={24} />, color: 'bg-rose-50' },
+              { name: 'Art', icon: <Palette size={24} />, color: 'bg-amber-50' },
+              { name: 'Clothing', icon: <Shirt size={24} />, color: 'bg-blue-50' },
+              { name: 'Hair', icon: <Scissors size={24} />, color: 'bg-purple-50' },
+              { name: 'Makeup', icon: <Sparkles size={24} />, color: 'bg-pink-50' },
+              { name: 'Electronics', icon: <Laptop size={24} />, color: 'bg-cyan-50' },
+            ].map((sector) => (
+              <button 
+                key={sector.name}
+                onClick={() => setCurrentTab('products')}
+                className="group flex flex-col items-center justify-center p-6 rounded-[2.5rem] border border-[#e2e0d8] hover:border-[var(--color-brand-accent)] hover:shadow-xl transition-all bg-white"
+              >
+                <div className={`w-14 h-14 ${sector.color} rounded-[1.5rem] flex items-center justify-center text-[var(--color-brand-text)] mb-4 group-hover:scale-110 transition-transform`}>
+                  {sector.icon}
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--color-brand-text-muted)] group-hover:text-[var(--color-brand-text)]">
+                  {sector.name}
+                </span>
+              </button>
             ))}
           </div>
         </div>

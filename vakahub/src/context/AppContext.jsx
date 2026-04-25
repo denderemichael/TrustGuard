@@ -20,7 +20,7 @@ export const AppProvider = ({ children }) => {
     if (parsed && parsed.length >= 10 && parsed[0].bgImage) return parsed;
     
     const initialProducts = [
-      { id: 1, name: "Baobab Health Powder", price: 12.50, category: "Health", image: "/honey.png", bgImage: "https://images.unsplash.com/photo-1512428815820-22e4d026360f?auto=format&fit=crop&q=80&w=1200", status: 'available' },
+      { id: 1, name: "Premium Baobab Powder", price: 12.50, category: "Health", image: "/honey.png", bgImage: "https://images.unsplash.com/photo-1512428815820-22e4d026360f?auto=format&fit=crop&q=80&w=1200", status: 'available' },
       { id: 2, name: "Harare Summer Dress", price: 25.00, category: "Clothing", image: "/honey.png", bgImage: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&q=80&w=1200", status: 'available' },
       { id: 3, name: "Human Hair Lace Wig", price: 85.00, category: "Hair", image: "/honey.png", bgImage: "https://images.unsplash.com/photo-1595475243692-392923ec8970?auto=format&fit=crop&q=80&w=1200", status: 'available' },
       { id: 4, name: "Matte Lipstick Set", price: 15.00, category: "Makeup", image: "/honey.png", bgImage: "https://images.unsplash.com/photo-1586771107445-d3ca888129ee?auto=format&fit=crop&q=80&w=1200", status: 'available' },
