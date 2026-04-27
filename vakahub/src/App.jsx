@@ -14,7 +14,7 @@ import Escrow from './pages/Escrow';
 import Profile from './pages/Profile';
 import Contact from './pages/Contact';
 import Cart from './pages/Cart';
-import Settings from './pages/Settings';
+import Advertise from './pages/Advertise';
 
 function App() {
   const { language, role, onboarded, currentTab, setCurrentTab } = useAppContext();
@@ -31,8 +31,8 @@ function App() {
       case 'cart':      return <Cart setCurrentTab={setCurrentTab} />;
       case 'profile':   return <Profile />;
       case 'contact':   return <Contact />;
+      case 'advertise': return <Advertise />;
       case 'settings':  return <Settings />;
-      case 'advertise': return <div className="p-20 text-center text-2xl italic font-serif text-[var(--color-brand-text-muted)]">ZimPulse Ad Exchange Integration Coming Soon...</div>;
       default:          return <Home setCurrentTab={setCurrentTab} />;
     }
   };

@@ -1,16 +1,21 @@
 import React from 'react';
-import { ShoppingBag, Settings, User } from 'lucide-react';
+import { ShoppingBag, Settings, User, Languages, ArrowLeft } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const TopBar = () => {
-  const { t, role, products, cart, currentTab, setCurrentTab } = useAppContext();
+  const { t, role, cart, currentTab, setCurrentTab, language, setLanguage, goBack, canGoBack } = useAppContext();
+
+  const toggleLanguage = () => {
+    const langs = ['en', 'sn', 'nd'];
+    const nextIdx = (langs.indexOf(language) + 1) % langs.length;
+    setLanguage(langs[nextIdx]);
+  };
 
   const adminTabs = [
     { id: 'home', label: t('dashboard') },
     { id: 'products', label: t('products') },
     { id: 'orders', label: t('orders') },
     { id: 'advertise', label: t('advertise') },
-    { id: 'profile', label: t('profile') },
   ];
 
   const userTabs = [
@@ -18,7 +23,6 @@ const TopBar = () => {
     { id: 'products', label: t('collections') },
     { id: 'orders', label: t('myOrders') },
     { id: 'contact', label: t('contact') },
-    { id: 'profile', label: t('profile') },
   ];
 
   const tabs = role === 'admin' ? adminTabs : userTabs;
@@ -27,11 +31,22 @@ const TopBar = () => {
     <nav className="w-full bg-[var(--color-brand-bg)] border-b border-[#e2e0d8] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Left: Logo */}
-          <div className="flex-shrink-0 cursor-pointer flex items-center space-x-2" onClick={() => setCurrentTab('home')}>
-            <span className="font-serif italic text-2xl font-bold text-[var(--color-brand-text)] tracking-tight">
-              VakaHub
-            </span>
+          {/* Left: Logo + Back Button */}
+          <div className="flex-shrink-0 flex items-center space-x-4">
+            {canGoBack && (
+              <button 
+                onClick={goBack}
+                className="p-2 bg-white rounded-full border border-[#e2e0d8] text-[var(--color-brand-text)] hover:bg-[#f0eee4] transition-all shadow-sm flex items-center justify-center"
+                title="Go Back"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <div className="cursor-pointer flex items-center space-x-2" onClick={() => setCurrentTab('home')}>
+              <span className="font-serif italic text-2xl font-bold text-[var(--color-brand-text)] tracking-tight">
+                VakaHub
+              </span>
+            </div>
           </div>
 
           {/* Center: Tabs */}
@@ -52,7 +67,17 @@ const TopBar = () => {
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center space-x-5">
+          <div className="flex items-center space-x-3">
+            {/* Language Switcher */}
+            <button 
+              onClick={toggleLanguage}
+              className="p-2 text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-accent)] transition-colors flex items-center space-x-1"
+              title="Change Language"
+            >
+              <Languages size={20} strokeWidth={1.5} />
+              <span className="text-[10px] font-bold uppercase">{language}</span>
+            </button>
+
             {role === 'user' && (
               <button 
                 onClick={() => setCurrentTab('cart')} 

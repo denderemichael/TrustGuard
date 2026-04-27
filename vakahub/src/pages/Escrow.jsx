@@ -155,17 +155,20 @@ const EscrowPage = () => {
   const [manualCode, setManualCode] = useState('');
   const [error, setError] = useState('');
 
-  const activeOrders = orders.filter(o => o.status === 'pending');
+  // For MVP, the current admin is 'shop-1'
+  const myShopId = role === 'admin' ? 'shop-1' : null;
+  const activeOrders = role === 'admin' 
+    ? orders.filter(o => o.status === 'pending' && o.sellerId === myShopId)
+    : orders.filter(o => o.status === 'pending');
 
   const handleScan = (code) => {
     const order = orders.find(o => o.escrowId === code || o.id === code);
-    if (order && order.status === 'pending') {
+    if (order && order.status === 'pending' && (role === 'user' || order.sellerId === myShopId)) {
       const success = releaseFunds(order.id);
       if (success) {
         setScanMode(false);
         setManualCode('');
         setError('');
-        // Show success state
       }
     } else {
       setError('Invalid or expired code');
@@ -180,13 +183,13 @@ const EscrowPage = () => {
             {role === 'admin' ? "Merchant Terminal" : "My Active Escrows"}
           </h2>
           <p className="text-[var(--color-brand-text-muted)]">
-            {role === 'admin' ? "Scan buyer codes to release pending funds." : "Show these codes to the merchant at handover."}
+            {role === 'admin' ? `Managing Orders for ${myShopId}` : "Show these codes to the merchant at handover."}
           </p>
         </div>
         {role === 'admin' && (
           <button 
             onClick={() => setScanMode(!scanMode)}
-            className="bg-[var(--color-brand-accent)] text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2"
+            className="bg-[var(--color-brand-accent)] text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 shadow-lg"
           >
             <Scan size={20} />
             <span>{scanMode ? "Cancel Scan" : "Scan Code"}</span>
@@ -233,20 +236,28 @@ const EscrowPage = () => {
               key={order.id}
               layoutId={order.id}
               onClick={() => setSelectedOrder(order)}
-              className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#e2e0d8] flex items-center justify-between cursor-pointer hover:shadow-md transition-all"
+              className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#e2e0d8] flex items-center justify-between cursor-pointer hover:shadow-md transition-all group"
             >
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-[#fcfcfa] rounded-2xl flex items-center justify-center border border-[#e2e0d8]">
-                  <ShoppingBag size={24} className="text-[var(--color-brand-accent)]" />
+              <div className="flex items-center space-x-6">
+                <div className="w-16 h-16 bg-[#fcfcfa] rounded-2xl flex items-center justify-center border border-[#e2e0d8] group-hover:bg-[var(--color-brand-accent)] group-hover:text-white transition-colors">
+                  <QrCode size={24} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-[var(--color-brand-text)]">{order.id}</h4>
-                  <p className="text-xs text-[var(--color-brand-text-muted)]">{order.items.length} items · {order.paymentMethod}</p>
+                  <div className="flex items-center space-x-2">
+                    <h4 className="font-bold text-[var(--color-brand-text)]">{order.id}</h4>
+                    <span className="text-[10px] bg-[#f0eee4] text-[var(--color-brand-accent)] px-2 py-0.5 rounded-full font-bold uppercase">{order.paymentMethod}</span>
+                  </div>
+                  <p className="text-sm text-[var(--color-brand-text)] font-medium mt-1">
+                    {role === 'admin' ? `Buyer: ${order.buyerName}` : `${order.items.length} Items`}
+                  </p>
+                  <p className="text-xs text-[var(--color-brand-text-muted)]">
+                    {new Date(order.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                  </p>
                 </div>
               </div>
               
               <div className="text-right">
-                <p className="text-lg font-bold text-[var(--color-brand-accent)]">${order.totalUsd.toFixed(2)}</p>
+                <p className="text-xl font-bold text-[var(--color-brand-accent)]">${order.totalUsd.toFixed(2)}</p>
                 <div className="flex items-center space-x-1 text-rose-500 text-[10px] font-bold uppercase tracking-wider mt-1 justify-end">
                   <Clock size={10} />
                   <Countdown date={order.expiry} />
