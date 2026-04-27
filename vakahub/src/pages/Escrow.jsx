@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight } from 'lucide-react';
+import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight, Clock, X, ShoppingBag } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 // Simple visual QR simulation using a grid
@@ -149,7 +149,7 @@ export const BuyerEscrow = ({ product, onClose, onConfirm }) => {
 
 // ---------- SELLER view: scan QR to release funds ----------
 const EscrowPage = () => {
-  const { t, orders, releaseFunds, role, getZiGPrice } = useAppContext();
+  const { t, orders, releaseFunds, role, getZiGPrice, setCurrentTab } = useAppContext();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [scanMode, setScanMode] = useState(false);
   const [manualCode, setManualCode] = useState('');
@@ -226,9 +226,18 @@ const EscrowPage = () => {
 
       <div className="grid gap-6">
         {activeOrders.length === 0 ? (
-          <div className="text-center py-20 bg-[#fcfcfa] rounded-[2.5rem] border-2 border-dashed border-[#e2e0d8]">
-            <ShieldCheck size={48} className="mx-auto text-[#d1cec1] mb-4" />
-            <p className="text-[var(--color-brand-text-muted)] italic">No active escrows found.</p>
+          <div className="text-center py-24 bg-[#fcfcfa] rounded-[3rem] border-2 border-dashed border-[#e2e0d8]">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-[#f0eee4]">
+              <ShoppingBag size={32} className="text-[#d1cec1]" />
+            </div>
+            <h3 className="text-2xl font-serif font-bold italic text-[var(--color-brand-text)] mb-2">No active orders</h3>
+            <p className="text-[var(--color-brand-text-muted)] mb-10 max-w-xs mx-auto italic">Your secure escrow orders will appear here once you make a purchase.</p>
+            <button 
+              onClick={() => setCurrentTab('products')}
+              className="bg-[var(--color-brand-accent)] text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              Browse Products
+            </button>
           </div>
         ) : (
           activeOrders.map(order => (

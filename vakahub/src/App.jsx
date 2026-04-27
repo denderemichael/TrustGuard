@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import Contact from './pages/Contact';
 import Cart from './pages/Cart';
 import Advertise from './pages/Advertise';
+import Settings from './pages/Settings';
 
 function App() {
   const { language, role, onboarded, currentTab, setCurrentTab } = useAppContext();

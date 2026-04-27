@@ -3,7 +3,7 @@ import { Globe, Shield, HelpCircle, LogOut, RefreshCw, Bell, Fingerprint, User, 
 import { useAppContext } from '../context/AppContext';
 
 const Settings = () => {
-  const { t, language, setLanguage, role, resetApp, userProfile, updateProfile } = useAppContext();
+  const { t, language, setLanguage, role, setRole, setOnboarded, resetApp, userProfile, updateProfile, setCurrentTab } = useAppContext();
   const [profileData, setProfileData] = useState(userProfile);
   const [prefs, setPrefs] = useState({ notifications: true, biometrics: false });
 
@@ -99,6 +99,23 @@ const Settings = () => {
         {/* Preferences */}
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-[#e2e0d8]">
           <div className="space-y-6">
+            <button 
+              onClick={() => {
+                const newRole = role === 'admin' ? 'user' : 'admin';
+                setRole(newRole);
+                setCurrentTab('home');
+              }}
+              className="w-full flex items-center justify-between group"
+            >
+              <div className="flex items-center space-x-4">
+                <RefreshCw size={20} className="text-[var(--color-brand-text-muted)] group-hover:rotate-180 transition-transform duration-500" />
+                <span className="font-bold text-[var(--color-brand-text)]">
+                  {role === 'admin' ? "Switch to Customer View" : "Switch to Merchant View"}
+                </span>
+              </div>
+              <span className="text-[var(--color-brand-text-muted)] group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Bell size={20} className="text-[var(--color-brand-text-muted)]" />
@@ -139,13 +156,26 @@ const Settings = () => {
         </div>
 
         {/* Reset */}
-        <button
-          onClick={resetApp}
-          className="w-full bg-rose-50 text-rose-600 p-6 rounded-[2rem] font-bold border border-rose-100 flex items-center justify-center space-x-3 hover:bg-rose-100 transition-all group"
-        >
-          <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-          <span>{t('resetData')}</span>
-        </button>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => {
+              setRole(null);
+              setOnboarded(false);
+            }}
+            className="bg-white text-[var(--color-brand-text)] p-6 rounded-[2rem] font-bold border border-[#e2e0d8] flex items-center justify-center space-x-3 hover:bg-[#f0eee4] transition-all"
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+          
+          <button
+            onClick={resetApp}
+            className="bg-rose-50 text-rose-600 p-6 rounded-[2rem] font-bold border border-rose-100 flex items-center justify-center space-x-3 hover:bg-rose-100 transition-all group"
+          >
+            <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+            <span>{t('resetData')}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ const TopBar = () => {
         <div className="flex justify-between items-center h-20">
           {/* Left: Logo + Back Button */}
           <div className="flex-shrink-0 flex items-center space-x-4">
-            {canGoBack && (
+            {canGoBack && currentTab !== 'home' && (
               <button 
                 onClick={goBack}
                 className="p-2 bg-white rounded-full border border-[#e2e0d8] text-[var(--color-brand-text)] hover:bg-[#f0eee4] transition-all shadow-sm flex items-center justify-center"

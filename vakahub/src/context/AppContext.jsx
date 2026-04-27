@@ -6,8 +6,8 @@ const AppContext = createContext();
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
-  const [language, setLanguage] = useState(() => localStorage.getItem('vakahub_language') || null);
-  const [role, setRole] = useState(null); // always choose role after onboarding
+  const [language, setLanguage] = useState(() => localStorage.getItem('vakahub_language') || 'en');
+  const [role, setRole] = useState(() => localStorage.getItem('vakahub_role') || null);
   const [sales, setSales] = useState(() => {
     const saved = localStorage.getItem('vakahub_sales');
     return saved ? JSON.parse(saved) : [];
@@ -16,8 +16,8 @@ export const AppProvider = ({ children }) => {
     const saved = localStorage.getItem('vakahub_products');
     const parsed = saved ? JSON.parse(saved) : null;
     
-    // Force reset if we have old data or less than 100 products
-    if (parsed && parsed.length >= 100 && parsed[0].image?.startsWith('https://images.unsplash')) return parsed;
+    // Force reset to apply reasonable prices (first item is Grocery, should be <= $15)
+    if (parsed && parsed.length >= 105 && parsed[0].price <= 15) return parsed;
     
     const initialProducts = [
       // ... Programmatically generate 105 highly curated items
@@ -48,10 +48,22 @@ export const AppProvider = ({ children }) => {
 
         const imgId = catImages[cat][i % catImages[cat].length];
         
+        const priceRanges = {
+          'Groceries': [1, 15],
+          'Health': [5, 30],
+          'Art': [10, 60],
+          'Clothing': [10, 40],
+          'Hair': [5, 35],
+          'Makeup': [5, 30],
+          'Electronics': [20, 100]
+        };
+        const [min, max] = priceRanges[cat] || [5, 50];
+        const price = parseFloat((Math.random() * (max - min) + min).toFixed(2));
+
         return {
           id: i + 1,
           name: `${names[cat][i % 10]} ${i >= 70 ? 'Premium' : i >= 35 ? 'Elite' : 'Select'}`,
-          price: parseFloat((Math.random() * 120 + 5).toFixed(2)),
+          price: price,
           category: cat,
           image: `https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&q=80&w=600`,
           bgImage: `https://images.unsplash.com/photo-${imgId}?auto=format&fit=crop&q=80&w=1200`,
@@ -68,7 +80,7 @@ export const AppProvider = ({ children }) => {
     const saved = localStorage.getItem('vakahub_profile');
     return saved ? JSON.parse(saved) : { name: 'Simba Blessed', avatar: '', bio: '', joined: new Date().toISOString() };
   });
-  const [onboarded, setOnboarded] = useState(false);
+  const [onboarded, setOnboarded] = useState(() => localStorage.getItem('vakahub_onboarded') === 'true');
 
   useEffect(() => {
     if (language) localStorage.setItem('vakahub_language', language);
