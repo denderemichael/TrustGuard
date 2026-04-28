@@ -4,13 +4,15 @@ import { Upload, Target, DollarSign, CheckCircle, Shield, Zap, Globe } from 'luc
 import { useAppContext } from '../context/AppContext';
 
 const Advertise = () => {
-  const { t, addAdvertisement, products } = useAppContext();
+  const { t, addAdvertisement, products, user } = useAppContext();
   const [adText, setAdText] = useState('');
   const [budget, setBudget] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [target, setTarget] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [preview, setPreview] = useState(null);
+
+  const myProducts = products.filter(p => p.sellerId === user?.uid);
 
   const calculateTime = (usd) => {
     if (!usd) return 0;
@@ -100,8 +102,8 @@ const Advertise = () => {
                     required
                     className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-4 rounded-2xl focus:border-[var(--color-brand-accent)] outline-none"
                   >
-                    <option value="">Choose a product...</option>
-                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    <option value="">{myProducts.length === 0 ? "No products found - Add one first" : "Choose a product..."}</option>
+                    {myProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
 

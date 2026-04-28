@@ -140,7 +140,7 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onSuccess }) => {
                 </div>
                 
                 <h3 className="text-2xl font-serif font-bold italic mb-4">Enter Phone Number</h3>
-                <p className="text-[var(--color-brand-text-muted)] text-sm mb-8">We'll send a secure prompt to your phone via {selectedMethod.name}.</p>
+                <p className="text-[var(--color-brand-text-muted)] text-sm mb-8">We'll send a **Secure Payment Link via SMS** to your phone via {selectedMethod.name}.</p>
 
                 <div className="space-y-6">
                   <div className="relative">
@@ -159,8 +159,16 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onSuccess }) => {
                     disabled={loading || phoneNumber.length < 9}
                     className="w-full bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
                   >
-                    {loading ? <Loader2 className="animate-spin" /> : <><span>Pay ${totalAmount.toFixed(2)}</span> <ArrowRight size={20} /></>}
+                    {loading ? (
+                      <><Loader2 className="animate-spin" /> <span>Sending SMS...</span></>
+                    ) : (
+                      <><span>Request SMS Payment</span> <ArrowRight size={20} /></>
+                    )}
                   </button>
+                  
+                  <p className="text-[10px] text-center text-[var(--color-brand-text-muted)] italic">
+                    By clicking, you will receive a push notification or USSD prompt on your handset.
+                  </p>
                 </div>
               </motion.div>
             )}

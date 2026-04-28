@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, ShoppingBag, Settings, Trash2, ShieldCheck, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { storage } from '../firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const Products = () => {
-  const { t, role, products, addProduct, updateProduct, deleteProduct, addToCart, getZiGPrice } = useAppContext();
-  const [showForm, setShowForm] = useState(false);
+  const { t, role, products, addProduct, updateProduct, deleteProduct, addToCart, getZiGPrice, showAddProduct, setShowAddProduct } = useAppContext();
   const [editingProduct, setEditingProduct] = useState(null);
   const [uploading, setUploading] = useState(false);
   
@@ -16,6 +13,17 @@ const Products = () => {
   const [category, setCategory] = useState('Groceries');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+
+  // Sync local visibility with global trigger
+  useEffect(() => {
+    if (showAddProduct) {
+      setEditingProduct(null);
+      setName('');
+      setPrice('');
+      setCategory('Groceries');
+      setImagePreview('');
+    }
+  }, [showAddProduct]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -27,9 +35,22 @@ const Products = () => {
 
   const uploadImage = async () => {
     if (!imageFile) return null;
-    const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
-    const snapshot = await uploadBytes(storageRef, imageFile);
-    return await getDownloadURL(snapshot.ref);
+    
+    const IMGBB_KEY = import.meta.env.VITE_IMGBB_API_KEY;
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      return data.data.url;
+    } else {
+      throw new Error("ImgBB upload failed");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -69,7 +90,7 @@ const Products = () => {
     setCategory('Groceries');
     setImageFile(null);
     setImagePreview('');
-    setShowForm(false);
+    setShowAddProduct(false);
     setEditingProduct(null);
   };
 
@@ -79,7 +100,7 @@ const Products = () => {
     setPrice(p.price);
     setCategory(p.category);
     setImagePreview(p.image);
-    setShowForm(true);
+    setShowAddProduct(true);
   };
 
   const [activeCategory, setActiveCategory] = useState('All');
@@ -100,7 +121,7 @@ const Products = () => {
         </div>
         {role === 'admin' && (
           <button 
-            onClick={() => setShowForm(true)}
+            onClick={() => setShowAddProduct(true)}
             className="bg-[var(--color-brand-accent)] text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center space-x-2"
           >
             <Plus size={20} />
@@ -128,7 +149,7 @@ const Products = () => {
 
       {/* Add/Edit Form Modal */}
       <AnimatePresence>
-        {showForm && (
+        {showAddProduct && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-lg rounded-[3rem] p-10 shadow-2xl relative">
               <button onClick={resetForm} className="absolute top-8 right-8 p-2 hover:bg-[#f0eee4] rounded-full transition-colors"><X size={20} /></button>

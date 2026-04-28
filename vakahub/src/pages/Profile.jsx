@@ -5,7 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import Wallet from '../components/Wallet';
 
 const Profile = () => {
-  const { t, user, role, orders, logout } = useAppContext();
+  const { t, user, role, orders, logout, setCurrentTab, setShowAddProduct } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.displayName || '');
   const [bio, setBio] = useState('');
@@ -127,12 +127,12 @@ const Profile = () => {
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: "Add Product", tab: 'products', icon: <ShoppingBag size={20} /> },
-                  { label: "View Orders", tab: 'orders', icon: <ShieldCheck size={20} /> },
-                  { label: "Business Ads", tab: 'advertise', icon: <Settings size={20} /> },
-                  { label: "Support Chat", tab: 'chatbot', icon: <User size={20} /> },
+                  { label: "Add Product", action: () => { setCurrentTab('products'); setShowAddProduct(true); }, icon: <ShoppingBag size={20} /> },
+                  { label: "View Orders", action: () => setCurrentTab('orders'), icon: <ShieldCheck size={20} /> },
+                  { label: "Business Ads", action: () => setCurrentTab('advertise'), icon: <Settings size={20} /> },
+                  { label: "Support Chat", action: () => setCurrentTab('contact'), icon: <User size={20} /> },
                 ].map((item, i) => (
-                  <button key={i} className="flex flex-col items-center justify-center p-6 rounded-[2rem] border border-[#e2e0d8] hover:border-[var(--color-brand-accent)] hover:bg-[#fcfcfa] transition-all group">
+                  <button key={i} onClick={item.action} className="flex flex-col items-center justify-center p-6 rounded-[2rem] border border-[#e2e0d8] hover:border-[var(--color-brand-accent)] hover:bg-[#fcfcfa] transition-all group">
                     <div className="text-[var(--color-brand-text-muted)] group-hover:text-[var(--color-brand-accent)] transition-colors mb-3">
                       {item.icon}
                     </div>

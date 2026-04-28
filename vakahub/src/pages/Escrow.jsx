@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight, Clock, X, ShoppingBag, Copy, Check } from 'lucide-react';
+import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight, Clock, X, ShoppingBag, Copy, Check, Loader2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAppContext } from '../context/AppContext';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
@@ -87,6 +87,24 @@ const EscrowPage = () => {
   const [scanMode, setScanMode] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [error, setError] = useState('');
+  const [stream, setStream] = useState(null);
+
+  useEffect(() => {
+    if (scanMode) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(s => setStream(s))
+        .catch(err => console.error("Camera error:", err));
+    } else {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+    }
+    return () => {
+      if (stream) stream.getTracks().forEach(track => track.stop());
+    };
+  }, [scanMode]);
+
   const [verifying, setVerifying] = useState(false);
 
   const handleVerifyAndClaim = async (code) => {
@@ -149,9 +167,23 @@ const EscrowPage = () => {
 
       {scanMode && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 bg-white p-10 rounded-[3rem] shadow-xl border border-[#e2e0d8] flex flex-col items-center">
-          <div className="w-64 h-64 bg-[#fcfcfa] border-2 border-dashed border-[var(--color-brand-accent)] rounded-3xl flex items-center justify-center mb-8 relative overflow-hidden">
-            <Scan size={64} className="text-[var(--color-brand-accent)] opacity-20" />
-            <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--color-brand-accent)] animate-scan shadow-[0_0_15px_var(--color-brand-accent)]"></div>
+          <div className="w-64 h-64 bg-black rounded-3xl flex items-center justify-center mb-8 relative overflow-hidden border-2 border-[var(--color-brand-accent)]">
+            {stream ? (
+              <video 
+                autoPlay 
+                playsInline 
+                muted 
+                className="w-full h-full object-cover"
+                ref={video => { if (video) video.srcObject = stream; }}
+              />
+            ) : (
+              <div className="text-center p-4">
+                <Loader2 className="animate-spin text-white mx-auto mb-2" />
+                <p className="text-white text-[10px] uppercase font-bold tracking-widest">Opening Camera...</p>
+              </div>
+            )}
+            <div className="absolute inset-0 pointer-events-none border-[20px] border-black/20"></div>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--color-brand-accent)] animate-scan shadow-[0_0_15px_var(--color-brand-accent)] z-10"></div>
           </div>
           
           <div className="w-full max-w-xs space-y-4">

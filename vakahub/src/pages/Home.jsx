@@ -19,8 +19,8 @@ const TESTIMONIALS = [
   { name: 'Takudzwa N.', role: 'Bulawayo Trader', stars: 5, text: 'Sold 40+ products through VakaHub. The QR release system means customers always trust me. Sales up 3x.' },
 ];
 
-const Home = ({ setCurrentTab }) => {
-  const { t, role, products = [], orders = [], addToCart } = useAppContext();
+const Home = () => {
+  const { t, role, products = [], orders = [], addToCart, setCurrentTab, setShowAddProduct } = useAppContext();
   const [sector, setSector] = useState('All');
 
   const todaySales = orders
@@ -88,9 +88,15 @@ const Home = ({ setCurrentTab }) => {
           <div className="bg-[#f0eee4] rounded-[2rem] border border-[#e2e0d8] p-8">
             <h3 className="font-serif text-2xl text-[var(--color-brand-text)] mb-6">{t('quickActions')}</h3>
             <div className="space-y-4">
-              {[{label:t('recordSale'),tab:'record'},{label:t('addProduct'),tab:'products'},{label:t('advertise'),tab:'advertise'},{label:`🔐 ${t('scanQr')}`,tab:'orders'},{label:t('sendSms'),tab:null}]
+              {[
+                { label: t('recordSale'), action: () => setCurrentTab('orders') },
+                { label: t('addProduct'), action: () => { setCurrentTab('products'); setShowAddProduct(true); } },
+                { label: t('advertise'), action: () => setCurrentTab('advertise') },
+                { label: `🔐 ${t('scanQr')}`, action: () => setCurrentTab('orders') },
+                { label: t('sendSms'), action: () => setCurrentTab('contact') }
+              ]
                 .map(a => (
-                  <button key={a.label} onClick={() => a.tab && setCurrentTab(a.tab)}
+                  <button key={a.label} onClick={a.action}
                     className="w-full bg-white p-4 rounded-2xl border border-[#e2e0d8] flex items-center justify-between hover:border-[var(--color-brand-accent)] group transition-all">
                     <span className="font-medium text-[var(--color-brand-text)] text-sm">{a.label}</span>
                     <span className="w-7 h-7 rounded-full bg-[var(--color-brand-bg)] flex items-center justify-center text-[var(--color-brand-accent)] group-hover:bg-[var(--color-brand-accent)] group-hover:text-white transition-colors">→</span>

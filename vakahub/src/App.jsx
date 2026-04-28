@@ -31,7 +31,7 @@ function App() {
 
   const renderTab = () => {
     switch (currentTab) {
-      case 'home':      return <Home setCurrentTab={setCurrentTab} />;
+      case 'home':      return <Home />;
       case 'products':  return <Products />;
       case 'orders':    return <Escrow />;
       case 'cart':      return <Cart setCurrentTab={setCurrentTab} />;
@@ -39,7 +39,7 @@ function App() {
       case 'contact':   return <Contact />;
       case 'advertise': return <Advertise />;
       case 'settings':  return <Settings />;
-      default:          return <Home setCurrentTab={setCurrentTab} />;
+      default:          return <Home />;
     }
   };
 

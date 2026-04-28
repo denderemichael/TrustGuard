@@ -20,6 +20,7 @@ export const AppProvider = ({ children }) => {
   const [wallets, setWallets] = useState({ available: 0, escrow: 0, total: 0 });
   const [cart, setCart] = useState([]);
   const [currentTab, setCurrentTab] = useState('home');
+  const [showAddProduct, setShowAddProduct] = useState(false);
   const [navHistory, setNavHistory] = useState(['home']);
 
   const ZIG_RATE = 25;
@@ -184,6 +185,7 @@ export const AppProvider = ({ children }) => {
       language, setLanguage, 
       role, setRole: updateRole,
       onboarded, setOnboarded,
+      showAddProduct, setShowAddProduct,
       products, orders, wallets, cart,
       currentTab, setCurrentTab: navigateTo, goBack, canGoBack: navHistory.length > 1,
       t, getZiGPrice, logout,
