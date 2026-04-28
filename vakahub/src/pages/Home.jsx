@@ -20,12 +20,12 @@ const TESTIMONIALS = [
 ];
 
 const Home = ({ setCurrentTab }) => {
-  const { t, role, sales, products, addToCart } = useAppContext();
+  const { t, role, products = [], orders = [], addToCart } = useAppContext();
   const [sector, setSector] = useState('All');
 
-  const todaySales = sales
-    .filter(s => new Date(s.date).toDateString() === new Date().toDateString())
-    .reduce((sum, s) => sum + parseFloat(s.amount), 0);
+  const todaySales = orders
+    .filter(s => s.status === 'completed' && new Date(s.date).toDateString() === new Date().toDateString())
+    .reduce((sum, s) => sum + parseFloat(s.totalUsd || 0), 0);
 
   const filtered = sector === 'All' ? products : products.filter(p => p.category === sector);
 
@@ -47,7 +47,7 @@ const Home = ({ setCurrentTab }) => {
           {[
             { label: t('todaysSales'), value: `$${todaySales.toFixed(2)}`, accent: true },
             { label: t('totalProducts'), value: products.length },
-            { label: t('totalCustomers'), value: sales.length },
+            { label: t('totalCustomers'), value: orders.length },
           ].map((c, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
               className={`p-8 rounded-[2rem] shadow-sm relative overflow-hidden ${c.accent ? 'bg-[var(--color-brand-accent)] text-white' : 'bg-white border border-[#e2e0d8]'}`}>
@@ -71,14 +71,14 @@ const Home = ({ setCurrentTab }) => {
                 <th className="pb-3 font-medium text-right">{t('amount')}</th>
               </tr></thead>
               <tbody className="divide-y divide-[#f0eee4]">
-                {sales.length === 0
+                {orders.length === 0
                   ? <tr><td colSpan="4" className="py-8 text-center text-[var(--color-brand-text-muted)] italic text-sm">{t('noSales')}</td></tr>
-                  : sales.slice(0,5).map(s => (
+                  : orders.slice(0,5).map(s => (
                     <tr key={s.id} className="hover:bg-[#fcfcfa]">
-                      <td className="py-4 text-sm font-mono font-medium">{s.refCode || `TXN-${s.id.toString().slice(-4)}`}</td>
+                      <td className="py-4 text-sm font-mono font-medium">{s.id.toString().slice(-4)}</td>
                       <td className="py-4 text-sm text-[var(--color-brand-text-muted)]">{new Date(s.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td>
-                      <td className="py-4"><span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f0eee4] text-[var(--color-brand-accent)]">{s.method}</span></td>
-                      <td className="py-4 font-serif font-semibold text-right">${parseFloat(s.amount).toFixed(2)}</td>
+                      <td className="py-4"><span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f0eee4] text-[var(--color-brand-accent)]">{s.paymentMethod}</span></td>
+                      <td className="py-4 font-serif font-semibold text-right">${parseFloat(s.totalUsd || 0).toFixed(2)}</td>
                     </tr>
                   ))
                 }

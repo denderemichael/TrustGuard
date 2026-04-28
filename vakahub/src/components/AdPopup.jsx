@@ -4,7 +4,7 @@ import { X, Sparkles, ShoppingBag, ChevronRight, ChevronLeft } from 'lucide-reac
 import { useAppContext } from '../context/AppContext';
 
 const AdPopup = () => {
-  const { advertisements, products, addToCart, role } = useAppContext();
+  const { advertisements = [], products = [], addToCart, role } = useAppContext();
   const [show, setShow] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 

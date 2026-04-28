@@ -1,177 +1,127 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight, Clock, X, ShoppingBag } from 'lucide-react';
+import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight, Clock, X, ShoppingBag, Copy, Check } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAppContext } from '../context/AppContext';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
-// Simple visual QR simulation using a grid
-const QRDisplay = ({ value }) => {
-  // Generate a stable pattern from the value string
-  const cells = Array.from({ length: 11 }, (_, row) =>
-    Array.from({ length: 11 }, (_, col) => {
-      const seed = (value.charCodeAt((row * 11 + col) % value.length) + row + col) % 3;
-      // Always fill corners for QR feel
-      if ((row < 3 && col < 3) || (row < 3 && col > 7) || (row > 7 && col < 3)) return true;
-      return seed === 0;
-    })
-  );
+// ---------- BUYER view: manages their secure escrow ----------
+export const BuyerEscrow = ({ order, onClose }) => {
+  const { t, getZiGPrice, role } = useAppContext();
+  const [releasing, setReleasing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  return (
-    <div className="inline-grid gap-0.5 p-4 bg-white rounded-2xl shadow-inner border border-[#e2e0d8]"
-      style={{ gridTemplateColumns: `repeat(11, 1fr)` }}>
-      {cells.flat().map((filled, i) => (
-        <div key={i} className={`w-4 h-4 rounded-sm ${filled ? 'bg-[var(--color-brand-accent)]' : 'bg-transparent'}`} />
-      ))}
-    </div>
-  );
-};
-
-// ---------- BUYER view: generates the QR escrow code ----------
-export const BuyerEscrow = ({ product, onClose, onConfirm }) => {
-  const { t, updateProduct, role } = useAppContext();
-  const [released, setReleased] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState('');
-
-  const isBought = product.status === 'bought' || product.status === 'released';
-  const escrowId = `ESC-${product.id}-${product.boughtAt || Date.now().toString(36).toUpperCase()}`;
-
-  const boughtDate = product.boughtAt ? new Date(product.boughtAt) : new Date();
-  const expiryDate = new Date(boughtDate);
-  expiryDate.setDate(expiryDate.getDate() + 3);
-
-  const handleRelease = () => {
-    updateProduct(product.id, { status: 'released' });
-    setReleased(true);
+  const handleRelease = async () => {
+    setReleasing(true);
+    try {
+      // Logic for buyer to "Unlock" the code for the seller
+      await updateDoc(doc(db, 'orders', order.id), { status: 'ready_for_handover' });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setReleasing(false);
+    }
   };
 
-  const handleConfirmPayment = () => {
-    if (selectedMethod) {
-      onConfirm(selectedMethod);
-    }
+  const copyCode = () => {
+    navigator.clipboard.writeText(order.escrowId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 flex flex-col items-center text-center overflow-hidden"
+        initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
+        className="bg-white rounded-[3rem] shadow-2xl max-w-sm w-full p-10 flex flex-col items-center text-center overflow-hidden relative"
       >
-        {!isBought ? (
-          <>
-            <div className="w-16 h-16 bg-[#f0eee4] rounded-full flex items-center justify-center mb-6">
-              <ShieldCheck size={32} className="text-[var(--color-brand-accent)]" />
-            </div>
-            <h3 className="text-2xl font-serif mb-2">{t('buyNow')}</h3>
-            <p className="text-[var(--color-brand-text-muted)] text-sm mb-6">{product.name} - ${product.price}</p>
-            
-            <div className="w-full space-y-3 mb-8">
-              <label className="block text-xs font-bold text-left text-[var(--color-brand-text-muted)] uppercase tracking-widest">{t('paymentMethod')}</label>
-              <div className="grid grid-cols-2 gap-3">
-                {['EcoCash', 'Zipit'].map(m => (
-                  <button key={m} onClick={() => setSelectedMethod(m)}
-                    className={`p-4 rounded-2xl border text-sm font-medium transition-all ${selectedMethod === m ? 'border-[var(--color-brand-accent)] bg-[#f0eee4] text-[var(--color-brand-accent)]' : 'border-[#e2e0d8] bg-white text-[var(--color-brand-text)]'}`}>
-                    {m}
-                  </button>
-                ))}
-              </div>
-            </div>
+        <button onClick={onClose} className="absolute top-8 right-8 p-2 hover:bg-[#f0eee4] rounded-full transition-colors"><X size={20} /></button>
 
-            <div className="flex w-full gap-3">
-              <button onClick={onClose} className="flex-1 p-4 rounded-2xl border border-[#e2e0d8] text-[var(--color-brand-text-muted)] font-medium">
-                {t('cancel')}
-              </button>
-              <button
-                onClick={handleConfirmPayment}
-                disabled={!selectedMethod}
-                className={`flex-1 p-4 rounded-2xl font-bold transition-all ${selectedMethod ? 'bg-[var(--color-brand-accent)] text-white' : 'bg-[#d1cec1] text-white cursor-not-allowed'}`}
-              >
-                {t('next')}
+        <div className="w-20 h-20 bg-[#f0eee4] rounded-full flex items-center justify-center mb-6">
+          <ShieldCheck size={40} className="text-[var(--color-brand-accent)]" />
+        </div>
+
+        <h3 className="text-2xl font-serif font-bold italic mb-2">Escrow Protected</h3>
+        <p className="text-[var(--color-brand-text-muted)] text-sm mb-6">${order.totalUsd.toFixed(2)} Secured</p>
+
+        <div className="bg-[#fcfcfa] border border-[#e2e0d8] p-6 rounded-[2rem] mb-8 w-full">
+          <div className="bg-white p-4 rounded-2xl border border-[#f0eee4] shadow-inner mb-6 flex justify-center">
+            <QRCodeSVG value={order.escrowId} size={180} level="H" includeMargin={true} />
+          </div>
+          
+          <div className="flex items-center justify-between bg-white border border-[#f0eee4] p-3 rounded-xl mb-2">
+            <span className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest">Manual Code</span>
+            <div className="flex items-center space-x-2">
+              <code className="font-mono font-bold text-[var(--color-brand-accent)]">{order.escrowId}</code>
+              <button onClick={copyCode} className="text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-accent)]">
+                {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
               </button>
             </div>
-          </>
-        ) : (released || product.status === 'released') ? (
-          <>
-            <div className="w-20 h-20 bg-[#e8faed] rounded-full flex items-center justify-center mb-4">
-              <CheckCircle size={40} className="text-[#2e7d32]" />
-            </div>
-            <h3 className="text-2xl font-serif mb-2 text-[var(--color-brand-text)]">{t('fundsReleased')}</h3>
-            <p className="text-[var(--color-brand-text-muted)] text-sm">${product.price} paid to seller via {product.paymentMethod}.</p>
-            <button onClick={onClose} className="mt-6 w-full bg-[var(--color-brand-accent)] text-white p-4 rounded-2xl font-semibold">
-              Done
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="inline-flex items-center space-x-2 bg-amber-50 text-amber-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-6 border border-amber-200">
-              <ShieldCheck size={14} />
-              <span>{t('escrowPending')} - {product.paymentMethod}</span>
-            </div>
+          </div>
+        </div>
 
-            <h3 className="text-xl font-serif mb-2">{product.name}</h3>
-            <p className="text-2xl font-bold text-[var(--color-brand-accent)] mb-4">${product.price}</p>
+        <p className="text-xs text-[var(--color-brand-text-muted)] leading-relaxed mb-8 px-4 italic">
+          Only share this code with the merchant AFTER you have inspected and received your goods.
+        </p>
 
-            <div className="bg-[#fcfcfa] border border-[#e2e0d8] p-4 rounded-2xl mb-6 w-full text-left">
-              <h4 className="text-xs font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest mb-1">{t('escrowHoldTitle')}</h4>
-              <p className="text-[10px] text-[var(--color-brand-text-muted)] mb-3 leading-tight">{t('escrowHoldDesc')}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">{t('daysRemaining')}:</span>
-                <span className="text-rose-600 font-bold">3 {t('daysRemaining').split(' ')[0]}</span>
-              </div>
-            </div>
-
-            <QRDisplay value={escrowId} />
-
-            <p className="text-xs text-[var(--color-brand-text-muted)] mt-4 px-4 leading-relaxed">
-              {t('showQr')}
-            </p>
-
-            <div className="flex w-full gap-3 mt-6">
-              <button onClick={onClose} className="flex-1 p-3 rounded-xl border border-[#e2e0d8] text-[var(--color-brand-text-muted)] text-sm">
-                {t('cancel')}
-              </button>
-              <button
-                onClick={handleRelease}
-                className="flex-1 p-3 rounded-xl bg-[var(--color-brand-accent)] text-white text-sm font-medium"
-              >
-                {role === 'user' ? t('claimGoods') : t('releaseFundsSeller')}
-              </button>
-            </div>
-          </>
-        )}
+        <button 
+          onClick={handleRelease}
+          disabled={order.status === 'ready_for_handover' || releasing}
+          className="w-full bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all disabled:bg-[#d1cec1]"
+        >
+          {releasing ? 'Updating...' : order.status === 'ready_for_handover' ? 'Ready for Handover' : 'Release Payment'}
+        </button>
       </motion.div>
     </motion.div>
   );
 };
 
-// ---------- SELLER view: scan QR to release funds ----------
+// ---------- SELLER/MERCHANT view: scan & verify ----------
 const EscrowPage = () => {
-  const { t, orders, releaseFunds, role, getZiGPrice, setCurrentTab } = useAppContext();
+  const { t, orders, user, role, setCurrentTab } = useAppContext();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [scanMode, setScanMode] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [error, setError] = useState('');
+  const [verifying, setVerifying] = useState(false);
 
-  // For MVP, the current admin is 'shop-1'
-  const myShopId = role === 'admin' ? 'shop-1' : null;
-  const activeOrders = role === 'admin' 
-    ? orders.filter(o => o.status === 'pending' && o.sellerId === myShopId)
-    : orders.filter(o => o.status === 'pending');
-
-  const handleScan = (code) => {
-    const order = orders.find(o => o.escrowId === code || o.id === code);
-    if (order && order.status === 'pending' && (role === 'user' || order.sellerId === myShopId)) {
-      const success = releaseFunds(order.id);
-      if (success) {
-        setScanMode(false);
-        setManualCode('');
-        setError('');
+  const handleVerifyAndClaim = async (code) => {
+    setVerifying(true);
+    setError('');
+    
+    try {
+      const order = orders.find(o => o.escrowId === code);
+      if (!order) {
+        throw new Error("Invalid code");
       }
-    } else {
-      setError('Invalid or expired code');
+      if (order.status !== 'ready_for_handover') {
+        throw new Error("Buyer has not released funds yet");
+      }
+
+      // Finalize transaction
+      await updateDoc(doc(db, 'orders', order.id), { status: 'completed' });
+      
+      // Update Seller Wallet
+      const walletRef = doc(db, 'wallets', user.uid);
+      const walletSnap = await getDoc(walletRef);
+      const currentWallet = walletSnap.exists() ? walletSnap.data() : { available: 0, escrow: 0, total: 0 };
+      
+      await setDoc(walletRef, {
+        available: (currentWallet.available || 0) + order.totalUsd,
+        total: (currentWallet.total || 0) + order.totalUsd
+      }, { merge: true });
+
+      setScanMode(false);
+      setManualCode('');
+      setSelectedOrder(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -180,16 +130,16 @@ const EscrowPage = () => {
       <div className="flex justify-between items-end mb-10">
         <div>
           <h2 className="text-4xl font-serif text-[var(--color-brand-text)] mb-2 italic">
-            {role === 'admin' ? "Merchant Terminal" : "My Active Escrows"}
+            {role === 'admin' ? "Merchant Terminal" : "Active Escrows"}
           </h2>
           <p className="text-[var(--color-brand-text-muted)]">
-            {role === 'admin' ? `Managing Orders for ${myShopId}` : "Show these codes to the merchant at handover."}
+            {role === 'admin' ? "Verify handover and claim your funds." : "Show these codes to the merchant at handover."}
           </p>
         </div>
         {role === 'admin' && (
           <button 
             onClick={() => setScanMode(!scanMode)}
-            className="bg-[var(--color-brand-accent)] text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 shadow-lg"
+            className="bg-[var(--color-brand-accent)] text-white px-8 py-4 rounded-2xl font-bold flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all"
           >
             <Scan size={20} />
             <span>{scanMode ? "Cancel Scan" : "Scan Code"}</span>
@@ -198,69 +148,65 @@ const EscrowPage = () => {
       </div>
 
       {scanMode && (
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="mb-12 bg-white p-8 rounded-[2.5rem] shadow-xl border border-[#e2e0d8] flex flex-col items-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 bg-white p-10 rounded-[3rem] shadow-xl border border-[#e2e0d8] flex flex-col items-center">
           <div className="w-64 h-64 bg-[#fcfcfa] border-2 border-dashed border-[var(--color-brand-accent)] rounded-3xl flex items-center justify-center mb-8 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[var(--color-brand-accent)] opacity-5 animate-pulse"></div>
-            <Scan size={64} className="text-[var(--color-brand-accent)] opacity-30" />
-            <div className="absolute top-0 left-0 right-0 h-0.5 bg-[var(--color-brand-accent)] animate-scan"></div>
+            <Scan size={64} className="text-[var(--color-brand-accent)] opacity-20" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--color-brand-accent)] animate-scan shadow-[0_0_15px_var(--color-brand-accent)]"></div>
           </div>
           
           <div className="w-full max-w-xs space-y-4">
             <input 
               type="text" 
               value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-              placeholder="Enter code manually"
-              className="w-full p-4 rounded-xl border border-[#e2e0d8] text-center font-mono uppercase tracking-widest focus:border-[var(--color-brand-accent)] outline-none"
+              onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+              placeholder="ENTER MANUAL CODE"
+              className="w-full p-5 rounded-2xl border border-[#e2e0d8] text-center font-mono font-bold text-xl tracking-widest focus:border-[var(--color-brand-accent)] outline-none bg-[#fcfcfa]"
             />
-            {error && <p className="text-rose-500 text-xs text-center font-medium">{error}</p>}
+            {error && <p className="text-rose-500 text-xs text-center font-bold">{error}</p>}
             <button 
-              onClick={() => handleScan(manualCode)}
-              className="w-full bg-[var(--color-brand-accent)] text-white py-4 rounded-xl font-bold"
+              onClick={() => handleVerifyAndClaim(manualCode)}
+              disabled={verifying || !manualCode}
+              className="w-full bg-[var(--color-brand-accent)] text-white py-5 rounded-2xl font-bold shadow-lg disabled:opacity-50"
             >
-              Verify & Release Funds
+              {verifying ? 'Verifying...' : 'Verify & Claim Funds'}
             </button>
           </div>
         </motion.div>
       )}
 
       <div className="grid gap-6">
-        {activeOrders.length === 0 ? (
+        {orders.filter(o => o.status !== 'completed').length === 0 ? (
           <div className="text-center py-24 bg-[#fcfcfa] rounded-[3rem] border-2 border-dashed border-[#e2e0d8]">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-[#f0eee4]">
               <ShoppingBag size={32} className="text-[#d1cec1]" />
             </div>
             <h3 className="text-2xl font-serif font-bold italic text-[var(--color-brand-text)] mb-2">No active orders</h3>
-            <p className="text-[var(--color-brand-text-muted)] mb-10 max-w-xs mx-auto italic">Your secure escrow orders will appear here once you make a purchase.</p>
+            <p className="text-[var(--color-brand-text-muted)] mb-10 max-w-xs mx-auto italic text-sm">Your secure escrow orders will appear here once you make a purchase.</p>
             <button 
               onClick={() => setCurrentTab('products')}
-              className="bg-[var(--color-brand-accent)] text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
+              className="bg-[var(--color-brand-accent)] text-white px-10 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
             >
               Browse Products
             </button>
           </div>
         ) : (
-          activeOrders.map(order => (
+          orders.filter(o => o.status !== 'completed').map(order => (
             <motion.div 
               key={order.id}
-              layoutId={order.id}
               onClick={() => setSelectedOrder(order)}
-              className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#e2e0d8] flex items-center justify-between cursor-pointer hover:shadow-md transition-all group"
+              className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-[#e2e0d8] flex items-center justify-between cursor-pointer hover:shadow-md transition-all group"
             >
               <div className="flex items-center space-x-6">
-                <div className="w-16 h-16 bg-[#fcfcfa] rounded-2xl flex items-center justify-center border border-[#e2e0d8] group-hover:bg-[var(--color-brand-accent)] group-hover:text-white transition-colors">
+                <div className="w-16 h-16 bg-[#fcfcfa] rounded-2xl flex items-center justify-center border border-[#e2e0d8] group-hover:bg-[var(--color-brand-accent)] group-hover:text-white transition-all">
                   <QrCode size={24} />
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
                     <h4 className="font-bold text-[var(--color-brand-text)]">{order.id}</h4>
-                    <span className="text-[10px] bg-[#f0eee4] text-[var(--color-brand-accent)] px-2 py-0.5 rounded-full font-bold uppercase">{order.paymentMethod}</span>
+                    <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-bold uppercase border border-amber-100">{order.status.replace('_', ' ')}</span>
                   </div>
-                  <p className="text-sm text-[var(--color-brand-text)] font-medium mt-1">
-                    {role === 'admin' ? `Buyer: ${order.buyerName}` : `${order.items.length} Items`}
-                  </p>
-                  <p className="text-xs text-[var(--color-brand-text-muted)]">
-                    {new Date(order.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                  <p className="text-sm text-[var(--color-brand-text-muted)] font-medium mt-1">
+                    {order.items.length} Items · {order.paymentMethod}
                   </p>
                 </div>
               </div>
@@ -269,7 +215,7 @@ const EscrowPage = () => {
                 <p className="text-xl font-bold text-[var(--color-brand-accent)]">${order.totalUsd.toFixed(2)}</p>
                 <div className="flex items-center space-x-1 text-rose-500 text-[10px] font-bold uppercase tracking-wider mt-1 justify-end">
                   <Clock size={10} />
-                  <Countdown date={order.expiry} />
+                  <span>24h Remaining</span>
                 </div>
               </div>
             </motion.div>
@@ -278,13 +224,14 @@ const EscrowPage = () => {
       </div>
 
       <AnimatePresence>
-        {selectedOrder && (
-          <OrderModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+        {selectedOrder && role === 'user' && (
+          <BuyerEscrow order={selectedOrder} onClose={() => setSelectedOrder(null)} />
         )}
       </AnimatePresence>
     </div>
   );
 };
+
 
 const Countdown = ({ date }) => {
   const [timeLeft, setTimeLeft] = useState('');

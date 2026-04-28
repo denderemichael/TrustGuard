@@ -1,42 +1,74 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, ShoppingBag, Settings, Trash2, ShieldCheck } from 'lucide-react';
+import { Plus, X, ShoppingBag, Settings, Trash2, ShieldCheck, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { storage } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const Products = () => {
   const { t, role, products, addProduct, updateProduct, deleteProduct, addToCart, getZiGPrice } = useAppContext();
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [uploading, setUploading] = useState(false);
   
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('Groceries');
-  const [bgImage, setBgImage] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const productData = { 
-      name, 
-      price: parseFloat(price), 
-      category,
-      image: '/honey.png',
-      bgImage: bgImage || 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=1200'
-    };
-
-    if (editingProduct) {
-      updateProduct(editingProduct.id, productData);
-    } else {
-      addProduct(productData);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
+  };
 
-    resetForm();
+  const uploadImage = async () => {
+    if (!imageFile) return null;
+    const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
+    const snapshot = await uploadBytes(storageRef, imageFile);
+    return await getDownloadURL(snapshot.ref);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setUploading(true);
+    
+    try {
+      let imageUrl = editingProduct?.image || '/honey.png';
+      if (imageFile) {
+        imageUrl = await uploadImage();
+      }
+
+      const productData = { 
+        name, 
+        price: parseFloat(price), 
+        category,
+        image: imageUrl,
+        bgImage: imageUrl // Use same image for bg if not specified
+      };
+
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData);
+      } else {
+        await addProduct(productData);
+      }
+      resetForm();
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const resetForm = () => {
     setName('');
     setPrice('');
     setCategory('Groceries');
-    setBgImage('');
+    setImageFile(null);
+    setImagePreview('');
     setShowForm(false);
     setEditingProduct(null);
   };
@@ -46,7 +78,7 @@ const Products = () => {
     setName(p.name);
     setPrice(p.price);
     setCategory(p.category);
-    setBgImage(p.bgImage);
+    setImagePreview(p.image);
     setShowForm(true);
   };
 
@@ -122,12 +154,43 @@ const Products = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Background Image URL (Optional)</label>
-                  <input type="text" value={bgImage} onChange={(e) => setBgImage(e.target.value)} className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-4 rounded-2xl focus:border-[var(--color-brand-accent)] outline-none" placeholder="https://unsplash.com/..." />
+                  <label className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Product Image</label>
+                  <div className="relative group cursor-pointer h-48 rounded-3xl border-2 border-dashed border-[#e2e0d8] hover:border-[var(--color-brand-accent)] transition-all flex flex-col items-center justify-center overflow-hidden bg-[#fcfcfa]">
+                    {imagePreview ? (
+                      <>
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Upload className="text-white" size={32} />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center p-6">
+                        <div className="w-12 h-12 bg-[#f0eee4] rounded-full flex items-center justify-center mx-auto mb-3">
+                          <ImageIcon className="text-[var(--color-brand-text-muted)]" size={20} />
+                        </div>
+                        <p className="text-xs font-bold text-[var(--color-brand-text-muted)]">Click to Upload Image</p>
+                        <p className="text-[9px] text-[var(--color-brand-text-muted)] mt-1 italic">PNG, JPG or WEBP</p>
+                      </div>
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                  </div>
                 </div>
 
-                <button type="submit" className="w-full bg-[var(--color-brand-accent)] text-white py-5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all">
-                  {editingProduct ? "Save Changes" : t('addProduct')}
+                <button 
+                  type="submit" 
+                  disabled={uploading}
+                  className="w-full bg-[var(--color-brand-accent)] text-white py-5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                >
+                  {uploading ? (
+                    <><Loader2 className="animate-spin" size={20} /> <span>Processing...</span></>
+                  ) : (
+                    <span>{editingProduct ? "Save Changes" : t('addProduct')}</span>
+                  )}
                 </button>
               </form>
             </motion.div>

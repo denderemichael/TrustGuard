@@ -2,22 +2,18 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, ShoppingBag, ShieldCheck, CreditCard, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import PaymentModal from '../components/PaymentModal';
 
 const Cart = ({ setCurrentTab }) => {
   const { cart, removeFromCart, clearCart, createOrder, getZiGPrice, t } = useAppContext();
-  const [paymentMethod, setPaymentMethod] = useState('EcoCash');
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
 
   const totalUsd = cart.reduce((sum, item) => sum + item.price, 0);
 
-  const handleCheckout = () => {
-    setIsCheckingOut(true);
-    setTimeout(() => {
-      createOrder(cart, totalUsd, paymentMethod);
-      clearCart();
-      setIsCheckingOut(false);
-      setCurrentTab('orders');
-    }, 1500);
+  const handlePaymentSuccess = async (method) => {
+    await createOrder(cart, totalUsd, method);
+    clearCart();
+    setCurrentTab('orders');
   };
 
   if (cart.length === 0) {
@@ -45,37 +41,41 @@ const Cart = ({ setCurrentTab }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cart.map((item) => (
-            <motion.div 
-              key={item.cartId}
-              layout
-              exit={{ opacity: 0, x: -20 }}
-              className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#e2e0d8] flex items-center justify-between"
-            >
-              <div className="flex items-center space-x-5">
-                <div className="w-20 h-20 bg-[#f0eee4] rounded-2xl overflow-hidden border border-[#e2e0d8]">
-                  <img src={item.image} alt="" className="w-full h-full object-cover" />
+          <AnimatePresence>
+            {cart.map((item) => (
+              <motion.div 
+                key={item.cartId}
+                layout
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="bg-white p-6 rounded-[2rem] shadow-sm border border-[#e2e0d8] flex items-center justify-between"
+              >
+                <div className="flex items-center space-x-5">
+                  <div className="w-20 h-20 bg-[#f0eee4] rounded-2xl overflow-hidden border border-[#e2e0d8]">
+                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-[var(--color-brand-text)]">{item.name}</h4>
+                    <p className="text-xs text-[var(--color-brand-text-muted)] uppercase tracking-widest">{item.category}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-lg font-bold text-[var(--color-brand-text)]">{item.name}</h4>
-                  <p className="text-xs text-[var(--color-brand-text-muted)] uppercase tracking-widest">{item.category}</p>
+                
+                <div className="flex items-center space-x-8">
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-[var(--color-brand-accent)]">${item.price.toFixed(2)}</p>
+                    <p className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase">ZiG {getZiGPrice(item.price)}</p>
+                  </div>
+                  <button 
+                    onClick={() => removeFromCart(item.cartId)}
+                    className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
+                  >
+                    <Trash2 size={20} />
+                  </button>
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-8">
-                <div className="text-right">
-                  <p className="text-xl font-bold text-[var(--color-brand-accent)]">${item.price.toFixed(2)}</p>
-                  <p className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase">ZiG {getZiGPrice(item.price)}</p>
-                </div>
-                <button 
-                  onClick={() => removeFromCart(item.cartId)}
-                  className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
         {/* Order Summary */}
@@ -101,38 +101,12 @@ const Cart = ({ setCurrentTab }) => {
               </div>
             </div>
 
-            <div className="space-y-4 mb-8">
-              <label className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Payment Method</label>
-              <div className="grid grid-cols-2 gap-3">
-                {['EcoCash', 'Zipit'].map(method => (
-                  <button 
-                    key={method}
-                    onClick={() => setPaymentMethod(method)}
-                    className={`p-3 rounded-xl border text-sm font-medium transition-all ${
-                      paymentMethod === method 
-                        ? 'border-[var(--color-brand-accent)] bg-[#fcfcfa] text-[var(--color-brand-accent)]' 
-                        : 'border-[#e2e0d8] text-[var(--color-brand-text-muted)]'
-                    }`}
-                  >
-                    {method}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <button 
-              onClick={handleCheckout}
-              disabled={isCheckingOut}
+              onClick={() => setShowPayment(true)}
               className="w-full bg-[var(--color-brand-accent)] text-white py-5 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all flex items-center justify-center space-x-2"
             >
-              {isCheckingOut ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <ShieldCheck size={20} />
-                  <span>Secure Escrow Payment</span>
-                </>
-              )}
+              <ShieldCheck size={20} />
+              <span>Secure Escrow Payment</span>
             </button>
             
             <p className="text-[9px] text-[var(--color-brand-text-muted)] text-center mt-6 italic">
@@ -141,6 +115,13 @@ const Cart = ({ setCurrentTab }) => {
           </div>
         </div>
       </div>
+
+      <PaymentModal 
+        isOpen={showPayment} 
+        onClose={() => setShowPayment(false)} 
+        totalAmount={totalUsd} 
+        onSuccess={handlePaymentSuccess} 
+      />
     </div>
   );
 };
