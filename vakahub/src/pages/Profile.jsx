@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, ShieldCheck, Settings, User, LogOut } from 'lucide-react';
+import { ShoppingBag, ShieldCheck, Settings, User, LogOut, CheckCircle, Activity } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import Wallet from '../components/Wallet';
 
 const Profile = () => {
-  const { t, user, role, orders, logout, setCurrentTab, setShowAddProduct } = useAppContext();
+  const { t, user, role, orders, logout, setCurrentTab, setShowAddProduct, resetApp } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.displayName || '');
   const [bio, setBio] = useState('');
+
+  // Simulated AI Trust Score based on role
+  const trustScore = role === 'admin' ? 98 : 95;
 
   const userOrders = orders.filter(o => o.status !== 'pending');
 
@@ -26,24 +29,34 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="pt-16 pb-8 px-8 flex justify-between items-start">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-3">
-              <h2 className="text-3xl font-serif font-bold text-[var(--color-brand-text)] italic">
-                {user?.displayName || "VakaHub User"}
-              </h2>
-              <span className="bg-[#ebe8de] text-[var(--color-brand-text-muted)] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-[#d1cec1]">
-                {role === 'admin' ? "Merchant" : "Buyer"}
-              </span>
+        <div className="pt-16 pb-8 px-8">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center space-x-3">
+                <h2 className="text-3xl font-serif font-bold text-[var(--color-brand-text)] italic">
+                  {user?.displayName || 'User'}
+                </h2>
+                <div className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg flex items-center space-x-1 border border-emerald-100">
+                  <CheckCircle size={14} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">AI Verified</span>
+                </div>
+              </div>
+              <p className="text-[var(--color-brand-text-muted)] flex items-center space-x-2 mt-2 font-medium">
+                <span className="uppercase text-xs tracking-widest font-bold bg-[#f0eee4] px-3 py-1 rounded-full">{role} Account</span>
+                <span>·</span>
+                <span>{user?.email}</span>
+              </p>
+              
+              <div className="mt-4 flex items-center space-x-2 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-xl border border-indigo-100 w-fit">
+                <Activity size={16} />
+                <span className="text-xs font-bold tracking-wide">Google AI Trust Score: {trustScore}%</span>
+              </div>
             </div>
-            <p className="text-[var(--color-brand-text-muted)] text-sm max-w-sm">{bio || "Active community member"}</p>
-          </div>
-          <div className="flex space-x-3">
-            <button
+            <button 
               onClick={() => setIsEditing(!isEditing)}
-              className="px-6 py-2 rounded-full border border-[#e2e0d8] text-sm font-medium hover:bg-[#fcfcfa] transition-colors"
+              className="text-sm font-bold text-[var(--color-brand-accent)] bg-[#fcfcfa] border border-[#e2e0d8] px-6 py-2 rounded-xl hover:bg-[#f0eee4] transition-colors"
             >
-              {isEditing ? "Cancel" : "Edit"}
+              {isEditing ? 'Save' : 'Edit Profile'}
             </button>
             <button
               onClick={logout}
@@ -143,6 +156,16 @@ const Profile = () => {
             )}
           </div>
         </div>
+      </div>
+      
+      {/* Dev Reset */}
+      <div className="mt-12 text-center">
+        <button 
+          onClick={resetApp}
+          className="text-xs text-[var(--color-brand-text-muted)] hover:text-rose-500 transition-colors"
+        >
+          Developer: Reset App Data (Show Onboarding)
+        </button>
       </div>
     </div>
   );

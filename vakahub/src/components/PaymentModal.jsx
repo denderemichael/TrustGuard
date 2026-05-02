@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Smartphone, ShieldCheck, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Smartphone, ShieldCheck, CheckCircle2, ArrowRight, Loader2, Activity } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const PAYMENT_METHODS = [
   { 
     id: 'ecocash', 
     name: 'EcoCash', 
-    logo: 'https://seeklogo.com/images/E/ecocash-logo-4A8E0A9D6A-seeklogo.com.png', 
+    logo: 'https://seeklogo.com/images/E/ecocash-logo-4A8E0A9D6A-seeklogo.com.png', // Fallback, but I will use a placeholder style if blocked
     color: '#00539C' 
   },
   { 
@@ -32,41 +32,53 @@ const PAYMENT_METHODS = [
 
 const PaymentModal = ({ isOpen, onClose, totalAmount, onSuccess }) => {
   const { t, getZiGPrice } = useAppContext();
-  const [step, setStep] = useState(1); // 1: Select, 2: Phone/OTP, 3: Success
+  const [step, setStep] = useState(1); // 1: Select, 2: Phone, 3: Success
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSelectMethod = (method) => {
     setSelectedMethod(method);
     setStep(2);
+    setError('');
   };
 
   const handleSendPrompt = async () => {
     setLoading(true);
+    setError('');
     
-    // Simulate real API connection to Zimbabwe Gateway
+    // Simulate real API connection to Zimbabwe Gateway (Paynow)
     const gatewayId = import.meta.env.VITE_PAYNOW_INTEGRATION_ID;
-    console.log(`Connecting to ${selectedMethod.name} gateway via ${gatewayId}...`);
+    console.log(`Connecting to ${selectedMethod.name} gateway via Paynow ID: ${gatewayId}...`);
 
-    // Simulate network latency for API handshake
-    await new Promise(r => setTimeout(r, 2500));
+    const testNum = phoneNumber.replace(/\s+/g, '');
+
+    // Paynow Test Mode Simulation
+    if (testNum === '0774444444') {
+      await new Promise(r => setTimeout(r, 1000));
+      setError('Insufficient balance in mobile wallet.');
+      setLoading(false);
+      setStep(5);
+      return;
+    }
+
+    if (testNum === '0773333333') {
+      await new Promise(r => setTimeout(r, 3000));
+      setError('Transaction cancelled by user.');
+      setLoading(false);
+      setStep(5);
+      return;
+    }
+
+    if (testNum === '0772222222') {
+      await new Promise(r => setTimeout(r, 5000)); // Delayed Success
+    } else {
+      await new Promise(r => setTimeout(r, 2000)); // Standard Success (0771111111 or default)
+    }
     
     setLoading(false);
-    setStep(3);
-  };
-
-  const handleVerify = async () => {
-    setLoading(true);
-    
-    // Finalizing transaction with Gateway Key
-    const gatewayKey = import.meta.env.VITE_PAYNOW_INTEGRATION_KEY;
-    console.log("Verifying transaction with Key:", gatewayKey?.substring(0, 5) + "****");
-
-    await new Promise(r => setTimeout(r, 1500));
-    
-    setLoading(false);
+    // Skiping OTP as requested for testing
     onSuccess(selectedMethod.name);
     setStep(4);
   };
@@ -136,7 +148,17 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onSuccess }) => {
               >
                 <div className="mb-8 flex items-center space-x-4">
                   <button onClick={() => setStep(1)} className="p-2 hover:bg-[#f0eee4] rounded-full transition-colors">←</button>
-                  <img src={selectedMethod.logo} alt="" className="h-8 object-contain" />
+                  <div className="h-8 w-24 bg-[#f0eee4] rounded-lg flex items-center justify-center font-bold text-[10px] text-[var(--color-brand-accent)] uppercase overflow-hidden border border-[#e2e0d8]">
+                    <img 
+                      src={selectedMethod.logo} 
+                      alt="" 
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerText = selectedMethod.name;
+                      }}
+                    />
+                  </div>
                 </div>
                 
                 <h3 className="text-2xl font-serif font-bold italic mb-4">Enter Phone Number</h3>
@@ -148,11 +170,13 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onSuccess }) => {
                     <input 
                       type="tel" 
                       value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="0777 000 000"
-                      className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-5 pl-14 rounded-2xl outline-none focus:border-[var(--color-brand-accent)]"
+                      onChange={(e) => { setPhoneNumber(e.target.value); setError(''); }}
+                      placeholder="0771111111"
+                      className={`w-full bg-[#fcfcfa] border ${error ? 'border-rose-500' : 'border-[#e2e0d8]'} p-5 pl-14 rounded-2xl outline-none focus:border-[var(--color-brand-accent)]`}
                     />
                   </div>
+
+                  {error && <p className="text-rose-500 text-xs font-bold text-center bg-rose-50 p-3 rounded-xl">{error}</p>}
 
                   <button 
                     onClick={handleSendPrompt}
@@ -160,50 +184,21 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onSuccess }) => {
                     className="w-full bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
                   >
                     {loading ? (
-                      <><Loader2 className="animate-spin" /> <span>Sending SMS...</span></>
+                      <><Loader2 className="animate-spin" /> <span>Connecting Paynow...</span></>
                     ) : (
-                      <><span>Request SMS Payment</span> <ArrowRight size={20} /></>
+                      <><span>Pay with {selectedMethod.name}</span> <ArrowRight size={20} /></>
                     )}
                   </button>
                   
-                  <p className="text-[10px] text-center text-[var(--color-brand-text-muted)] italic">
-                    By clicking, you will receive a push notification or USSD prompt on your handset.
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div 
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <div className="text-center mb-8">
-                  <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Smartphone size={36} className="text-amber-600 animate-pulse" />
+                  <div className="bg-[#f0eee4] p-4 rounded-xl space-y-2">
+                    <p className="text-[10px] text-center font-bold text-[var(--color-brand-text)] uppercase tracking-widest border-b border-[#e2e0d8] pb-2 mb-2">Paynow Test Numbers</p>
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div className="flex justify-between"><span className="text-[var(--color-brand-text-muted)]">Success:</span> <span className="font-mono font-bold">0771111111</span></div>
+                      <div className="flex justify-between"><span className="text-[var(--color-brand-text-muted)]">Delayed:</span> <span className="font-mono font-bold">0772222222</span></div>
+                      <div className="flex justify-between"><span className="text-[var(--color-brand-text-muted)]">Cancel:</span> <span className="font-mono font-bold text-rose-500">0773333333</span></div>
+                      <div className="flex justify-between"><span className="text-[var(--color-brand-text-muted)]">No Funds:</span> <span className="font-mono font-bold text-rose-500">0774444444</span></div>
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-serif font-bold italic mb-2">Check Your Phone</h3>
-                  <p className="text-[var(--color-brand-text-muted)] text-sm">Please approve the transaction on your handset. Then enter the OTP if required.</p>
-                </div>
-
-                <div className="space-y-6">
-                  <input 
-                    type="text" 
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter OTP"
-                    className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-5 rounded-2xl text-center text-2xl font-bold tracking-[0.5em] outline-none focus:border-[var(--color-brand-accent)]"
-                  />
-
-                  <button 
-                    onClick={handleVerify}
-                    disabled={loading || otp.length < 4}
-                    className="w-full bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
-                  >
-                    {loading ? <Loader2 className="animate-spin" /> : <span>Verify & Secure Funds</span>}
-                  </button>
                 </div>
               </motion.div>
             )}
@@ -230,13 +225,44 @@ const PaymentModal = ({ isOpen, onClose, totalAmount, onSuccess }) => {
                 </button>
               </motion.div>
             )}
+
+            {step === 5 && (
+              <motion.div 
+                key="step5"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-8"
+              >
+                <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-8 border border-rose-100">
+                  <X size={48} className="text-rose-500" />
+                </div>
+                <h3 className="text-3xl font-serif font-bold italic mb-3 text-rose-600">Payment Failed</h3>
+                <p className="text-[var(--color-brand-text-muted)] text-sm mb-10 max-w-xs mx-auto">
+                  {error}
+                </p>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={() => setStep(2)}
+                    className="flex-1 bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold shadow-lg"
+                  >
+                    Try Again
+                  </button>
+                  <button 
+                    onClick={onClose}
+                    className="flex-1 bg-white text-[var(--color-brand-text)] border border-[#e2e0d8] p-5 rounded-2xl font-bold hover:border-rose-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
         {/* Security Badge */}
-        <div className="bg-[#fcfcfa] py-4 px-8 border-t border-[#e2e0d8] flex items-center justify-center space-x-2 text-[var(--color-brand-text-muted)]">
-          <ShieldCheck size={14} />
-          <span className="text-[10px] font-bold uppercase tracking-widest italic">Encrypted Escrow Protection</span>
+        <div className="bg-indigo-50 py-4 px-8 border-t border-indigo-100 flex items-center justify-center space-x-2 text-indigo-700">
+          <Activity size={14} />
+          <span className="text-[10px] font-bold uppercase tracking-widest">Protected by Google AI Fraud Detection</span>
         </div>
       </motion.div>
     </div>

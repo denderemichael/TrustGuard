@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { translations } from '../translations';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, collection, query, where, orderBy, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, updateDoc, onSnapshot, collection, query, where, orderBy, deleteDoc, serverTimestamp } from 'firebase/firestore';
 
 const AppContext = createContext();
 
@@ -22,6 +22,7 @@ export const AppProvider = ({ children }) => {
   const [currentTab, setCurrentTab] = useState('home');
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [navHistory, setNavHistory] = useState(['home']);
+  const [userProfile, setUserProfile] = useState({ name: '', bio: '' });
 
   const ZIG_RATE = 25;
 
@@ -53,11 +54,14 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const saveOnboarded = (val) => {
+    localStorage.setItem('vakahub_onboarded', val ? 'true' : 'false');
+    setOnboarded(val);
+  };
+
   // 3. Firestore Listeners for Data
   useEffect(() => {
     if (!user) return;
-
-    // Listen for products
     const qProducts = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
     const unsubProducts = onSnapshot(qProducts, (snap) => {
       setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -179,18 +183,35 @@ export const AppProvider = ({ children }) => {
     addNotification("Product Deleted", "The item has been removed from your shop.");
   };
 
+  const updateProfile = (data) => {
+    setUserProfile(data);
+    addNotification("Profile Updated", "Your profile has been saved successfully.");
+  };
+
+  const resetApp = async () => {
+    await signOut(auth);
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  const addAdvertisement = async (adData) => {
+    // For now, we simulate adding an advertisement
+    addNotification("Campaign Created", "Your advertisement is now active.");
+  };
+
   return (
     <AppContext.Provider value={{ 
       user, loading,
       language, setLanguage, 
       role, setRole: updateRole,
-      onboarded, setOnboarded,
+      onboarded, setOnboarded: saveOnboarded,
       showAddProduct, setShowAddProduct,
       products, orders, wallets, cart,
       currentTab, setCurrentTab: navigateTo, goBack, canGoBack: navHistory.length > 1,
       t, getZiGPrice, logout,
       createOrder, notifications,
       addProduct, updateProduct, deleteProduct,
+      userProfile, updateProfile, resetApp, addAdvertisement,
       addToCart: (p) => setCart(prev => [...prev, { ...p, cartId: Date.now() }]),
       removeFromCart: (id) => setCart(prev => prev.filter(i => i.cartId !== id)),
       clearCart: () => setCart([])

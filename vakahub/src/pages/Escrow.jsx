@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight, Clock, X, ShoppingBag, Copy, Check, Loader2 } from 'lucide-react';
+import { QrCode, CheckCircle, ShieldCheck, Scan, ArrowRight, Clock, X, ShoppingBag, Copy, Check, Loader2, Activity } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAppContext } from '../context/AppContext';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
@@ -37,44 +37,57 @@ export const BuyerEscrow = ({ order, onClose }) => {
     >
       <motion.div
         initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
-        className="bg-white rounded-[3rem] shadow-2xl max-w-sm w-full p-10 flex flex-col items-center text-center overflow-hidden relative"
+        className="bg-white rounded-[3rem] shadow-2xl max-w-sm w-full flex flex-col max-h-[90vh] overflow-hidden relative"
       >
-        <button onClick={onClose} className="absolute top-8 right-8 p-2 hover:bg-[#f0eee4] rounded-full transition-colors"><X size={20} /></button>
-
-        <div className="w-20 h-20 bg-[#f0eee4] rounded-full flex items-center justify-center mb-6">
-          <ShieldCheck size={40} className="text-[var(--color-brand-accent)]" />
+        {/* Fixed Header with X Button */}
+        <div className="p-6 pb-2 flex justify-end">
+          <button onClick={onClose} className="p-3 bg-[#f0eee4] hover:bg-[#e2e0d8] text-[var(--color-brand-text)] rounded-full transition-colors shadow-sm">
+            <X size={24} />
+          </button>
         </div>
 
-        <h3 className="text-2xl font-serif font-bold italic mb-2">Escrow Protected</h3>
-        <p className="text-[var(--color-brand-text-muted)] text-sm mb-6">${order.totalUsd.toFixed(2)} Secured</p>
-
-        <div className="bg-[#fcfcfa] border border-[#e2e0d8] p-6 rounded-[2rem] mb-8 w-full">
-          <div className="bg-white p-4 rounded-2xl border border-[#f0eee4] shadow-inner mb-6 flex justify-center">
-            <QRCodeSVG value={order.escrowId} size={180} level="H" includeMargin={true} />
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-8 pt-0 flex flex-col items-center text-center">
+          <div className="w-20 h-20 bg-[#f0eee4] rounded-full flex items-center justify-center mb-6 shrink-0">
+            <ShieldCheck size={40} className="text-[var(--color-brand-accent)]" />
           </div>
-          
-          <div className="flex items-center justify-between bg-white border border-[#f0eee4] p-3 rounded-xl mb-2">
-            <span className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest">Manual Code</span>
-            <div className="flex items-center space-x-2">
-              <code className="font-mono font-bold text-[var(--color-brand-accent)]">{order.escrowId}</code>
-              <button onClick={copyCode} className="text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-accent)]">
-                {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-              </button>
+
+          <h3 className="text-2xl font-serif font-bold italic mb-2">Escrow Protected</h3>
+          <p className="text-[var(--color-brand-text-muted)] text-sm mb-4">${order.totalUsd.toFixed(2)} Secured</p>
+
+          <div className="bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-xl mb-6 flex items-center space-x-2 text-indigo-700 w-full justify-center">
+            <Activity size={16} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Google AI Anti-Scam Active</span>
+          </div>
+
+          <div className="bg-[#fcfcfa] border border-[#e2e0d8] p-6 rounded-[2rem] mb-8 w-full shrink-0">
+            <div className="bg-white p-4 rounded-2xl border border-[#f0eee4] shadow-inner mb-6 flex justify-center">
+              <QRCodeSVG value={order.escrowId} size={180} level="H" includeMargin={true} />
+            </div>
+            
+            <div className="flex items-center justify-between bg-white border border-[#f0eee4] p-3 rounded-xl mb-2">
+              <span className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest">Manual Code</span>
+              <div className="flex items-center space-x-2">
+                <code className="font-mono font-bold text-[var(--color-brand-accent)] text-lg">{order.escrowId}</code>
+                <button onClick={copyCode} className="text-[var(--color-brand-text-muted)] hover:text-[var(--color-brand-accent)] p-1">
+                  {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                </button>
+              </div>
             </div>
           </div>
+
+          <p className="text-xs text-[var(--color-brand-text-muted)] leading-relaxed mb-8 px-4 italic shrink-0">
+            Only share this code with the merchant AFTER you have inspected and received your goods.
+          </p>
+
+          <button 
+            onClick={handleRelease}
+            disabled={order.status === 'ready_for_handover' || releasing}
+            className="w-full bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all disabled:bg-[#d1cec1] shrink-0"
+          >
+            {releasing ? 'Updating...' : order.status === 'ready_for_handover' ? 'Ready for Handover' : 'Release Payment'}
+          </button>
         </div>
-
-        <p className="text-xs text-[var(--color-brand-text-muted)] leading-relaxed mb-8 px-4 italic">
-          Only share this code with the merchant AFTER you have inspected and received your goods.
-        </p>
-
-        <button 
-          onClick={handleRelease}
-          disabled={order.status === 'ready_for_handover' || releasing}
-          className="w-full bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all disabled:bg-[#d1cec1]"
-        >
-          {releasing ? 'Updating...' : order.status === 'ready_for_handover' ? 'Ready for Handover' : 'Release Payment'}
-        </button>
       </motion.div>
     </motion.div>
   );

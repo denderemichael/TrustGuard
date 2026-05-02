@@ -113,7 +113,7 @@ const Onboarding = () => {
   const next = () => isLast ? handleFinish() : setIdx(i => i + 1);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[var(--color-brand-bg)] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-[var(--color-brand-bg)] flex flex-col overflow-y-auto">
       {/* Skip Button */}
       <div className="flex justify-end px-8 pt-12">
         {!isLast && (

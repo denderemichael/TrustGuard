@@ -55,64 +55,61 @@ const Auth = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-white rounded-[3rem] p-10 shadow-xl border border-[#e2e0d8]"
+        className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-xl border border-[#e2e0d8]"
       >
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#f0eee4] rounded-2xl mb-6">
-            <ShieldCheck size={32} className="text-[var(--color-brand-accent)]" />
-          </div>
-          <h1 className="text-3xl font-serif font-bold italic text-[var(--color-brand-text)]">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-serif font-bold italic text-[var(--color-brand-text)]">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h1>
-          <p className="text-[var(--color-brand-text-muted)] text-sm mt-2">
+          <p className="text-[var(--color-brand-text-muted)] text-xs mt-2">
             {isLogin ? 'Login to access your secure wallet' : 'Join Zimbabwe\'s most secure marketplace'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Full Name</label>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Full Name</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-brand-text-muted)]" size={18} />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-brand-text-muted)]" size={16} />
                 <input 
                   type="text" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required 
                   placeholder="John Doe"
-                  className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-4 pl-12 rounded-2xl outline-none focus:border-[var(--color-brand-accent)] transition-all"
+                  className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-3 pl-10 text-sm rounded-xl outline-none focus:border-[var(--color-brand-accent)] transition-all"
                 />
               </div>
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Email Address</label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-brand-text-muted)]" size={18} />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-brand-text-muted)]" size={16} />
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
                 placeholder="john@example.com"
-                className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-4 pl-12 rounded-2xl outline-none focus:border-[var(--color-brand-accent)] transition-all"
+                className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-3 pl-10 text-sm rounded-xl outline-none focus:border-[var(--color-brand-accent)] transition-all"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Password</label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-[var(--color-brand-text-muted)] uppercase tracking-widest px-1">Password</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-brand-text-muted)]" size={18} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-brand-text-muted)]" size={16} />
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
                 placeholder="••••••••"
-                className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-4 pl-12 rounded-2xl outline-none focus:border-[var(--color-brand-accent)] transition-all"
+                className="w-full bg-[#fcfcfa] border border-[#e2e0d8] p-3 pl-10 text-sm rounded-xl outline-none focus:border-[var(--color-brand-accent)] transition-all"
               />
             </div>
           </div>
@@ -130,20 +127,20 @@ const Auth = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-[var(--color-brand-accent)] text-white p-5 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+            className="w-full bg-[var(--color-brand-accent)] text-white p-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center space-x-2 mt-2"
           >
             {loading ? (
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
                 <span>{isLogin ? 'Login' : 'Get Started'}</span>
-                <ArrowRight size={20} />
+                <ArrowRight size={16} />
               </>
             )}
           </button>
         </form>
 
-        <div className="mt-8 text-center">
+        <div className="mt-6 text-center">
           <button 
             onClick={() => setIsLogin(!isLogin)}
             className="text-[var(--color-brand-text-muted)] text-sm font-medium hover:text-[var(--color-brand-accent)] transition-colors"

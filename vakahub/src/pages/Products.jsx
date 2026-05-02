@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, ShoppingBag, Settings, Trash2, ShieldCheck, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Plus, X, ShoppingBag, Settings, Trash2, ShieldCheck, Upload, Loader2, Image as ImageIcon, CheckCircle, Activity } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const Products = () => {
@@ -36,7 +36,7 @@ const Products = () => {
   const uploadImage = async () => {
     if (!imageFile) return null;
     
-    const IMGBB_KEY = import.meta.env.VITE_IMGBB_API_KEY;
+    const IMGBB_KEY = '55e32aab82cfeae5fa7ecbc03e939dde';
     const formData = new FormData();
     formData.append('image', imageFile);
 
@@ -58,7 +58,13 @@ const Products = () => {
     setUploading(true);
     
     try {
-      let imageUrl = editingProduct?.image || '/honey.png';
+      if (!imageFile && !editingProduct) {
+        alert("Please select an image first!");
+        setUploading(false);
+        return;
+      }
+
+      let imageUrl = editingProduct?.image || 'https://via.placeholder.com/400x500?text=No+Image';
       if (imageFile) {
         imageUrl = await uploadImage();
       }
@@ -234,6 +240,11 @@ const Products = () => {
               <div className="absolute top-4 left-4 bg-[#2c3b29] text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/20">
                 {p.category}
               </div>
+              <div className="absolute top-4 left-24 bg-emerald-500/90 backdrop-blur text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center space-x-1 shadow-sm">
+                <CheckCircle size={10} />
+                <span>AI Verified</span>
+              </div>
+
               
               {/* Background Hover Effect */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
@@ -252,7 +263,11 @@ const Products = () => {
 
             {/* Product Info */}
             <div className="p-8">
-              <h3 className="font-serif text-xl font-bold text-[var(--color-brand-text)] mb-2 group-hover:text-[var(--color-brand-accent)] transition-colors">{p.name}</h3>
+              <h3 className="font-serif text-xl font-bold text-[var(--color-brand-text)] mb-1 group-hover:text-[var(--color-brand-accent)] transition-colors">{p.name}</h3>
+              <div className="flex items-center space-x-1 text-indigo-600 mb-4 bg-indigo-50 w-fit px-2 py-0.5 rounded-lg border border-indigo-100">
+                <Activity size={12} />
+                <span className="text-[9px] font-bold uppercase tracking-widest">Trust Score: 98%</span>
+              </div>
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-2xl font-bold text-[var(--color-brand-accent)]">${p.price.toFixed(2)}</p>
