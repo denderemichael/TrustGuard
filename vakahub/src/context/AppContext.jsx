@@ -199,10 +199,15 @@ export const AppProvider = ({ children }) => {
     addNotification("Campaign Created", "Your advertisement is now active.");
   };
 
+  const changeLanguage = (lang) => {
+    localStorage.setItem('vakahub_language', lang);
+    setLanguage(lang);
+  };
+
   return (
     <AppContext.Provider value={{ 
       user, loading,
-      language, setLanguage, 
+      language, setLanguage: changeLanguage, 
       role, setRole: updateRole,
       onboarded, setOnboarded: saveOnboarded,
       showAddProduct, setShowAddProduct,

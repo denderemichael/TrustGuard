@@ -1,19 +1,46 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, User, ShieldCheck, ShoppingBag, CreditCard, HelpCircle } from 'lucide-react';
+import { MessageCircle, X, Send, User, ShieldCheck, ShoppingBag, CreditCard, HelpCircle, Loader2 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialize SDK
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || 'dummy_key');
+
+const SYSTEM_PROMPT = `You are VakaHub Assistant, a friendly and helpful AI for a local Zimbabwean e-commerce platform.
+VakaHub features:
+- 100% Escrow Protection: Funds are held safely until the buyer scans a QR code upon receiving goods.
+- Local First: Focused on Zimbabwean merchants and buyers.
+- Zero Foreign Ads Tax: Merchants save 15.5% compared to foreign ad platforms.
+- Currencies: Prices shown in USD and ZiG.
+
+Keep answers concise, friendly, and formatted nicely. If you don't know something, tell them to check their Profile or Contact Support.`;
 
 const Chatbot = () => {
   const { t, setCurrentTab } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef(null);
+  const chatSessionRef = useRef(null);
 
-  // Initialize first message when opened
+  // Initialize first message and Gemini session when opened
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{ id: 1, text: t('botIntro'), sender: 'bot' }]);
+    }
+    
+    if (isOpen && !chatSessionRef.current) {
+      try {
+        const model = genAI.getGenerativeModel({ 
+          model: 'gemini-1.5-flash',
+          systemInstruction: SYSTEM_PROMPT
+        });
+        chatSessionRef.current = model.startChat({ history: [] });
+      } catch (error) {
+        console.error("Gemini Init Error:", error);
+      }
     }
   }, [isOpen, messages.length, t]);
 
@@ -30,17 +57,7 @@ const Chatbot = () => {
     { label: 'General Help', key: 'help', icon: <HelpCircle size={14}/> },
   ];
 
-  const getBotResponse = (txt) => {
-    const low = txt.toLowerCase();
-    if (low.includes('pay') || low.includes('bhadhara') || low.includes('khokha')) return t('botPay');
-    if (low.includes('order') || low.includes('odha') || low.includes('oda')) return t('botOrder');
-    if (low.includes('refund') || low.includes('dzosera') || low.includes('buyisela')) return t('botRefund');
-    if (low.includes('escrow')) return t('botEscrow');
-    if (low.includes('help') || low.includes('rubatsiro') || low.includes('usizo')) return t('botHelp');
-    return t('botUnknown');
-  };
-
-  const handleSend = (e, customText = null) => {
+  const handleSend = async (e, customText = null) => {
     if (e) e.preventDefault();
     const textToSend = customText || input;
     if (!textToSend.trim()) return;
@@ -48,11 +65,23 @@ const Chatbot = () => {
     const userMsg = { id: Date.now(), text: textToSend, sender: 'user' };
     setMessages(prev => [...prev, userMsg]);
     if (!customText) setInput('');
+    setIsTyping(true);
 
-    setTimeout(() => {
-      const response = getBotResponse(textToSend);
-      setMessages(prev => [...prev, { id: Date.now() + 1, text: response, sender: 'bot' }]);
-    }, 600);
+    try {
+      if (!chatSessionRef.current) throw new Error("Chat not initialized");
+      const result = await chatSessionRef.current.sendMessage(textToSend);
+      const responseText = result.response.text();
+      setMessages(prev => [...prev, { id: Date.now() + 1, text: responseText, sender: 'bot' }]);
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => [...prev, { 
+        id: Date.now() + 1, 
+        text: "I'm having trouble connecting to my AI brain right now. Please make sure your Gemini API key is configured in .env!", 
+        sender: 'bot' 
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
@@ -102,6 +131,15 @@ const Chatbot = () => {
                   </motion.div>
                 </div>
               ))}
+
+              {isTyping && (
+                <div className="flex justify-start">
+                  <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white p-4 rounded-2xl rounded-tl-none border border-[#e2e0d8] shadow-sm flex items-center space-x-2">
+                    <Loader2 size={16} className="text-[var(--color-brand-accent)] animate-spin" />
+                    <span className="text-xs text-[var(--color-brand-text-muted)] italic">Thinking...</span>
+                  </motion.div>
+                </div>
+              )}
               
               {/* Bot typing simulation or Quick Actions at the end */}
               {messages.length > 0 && messages[messages.length - 1].sender === 'bot' && (
@@ -125,10 +163,15 @@ const Chatbot = () => {
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me something..."
-                className="flex-1 bg-[#fcfcfa] border border-[#e2e0d8] px-5 py-3.5 rounded-2xl text-sm outline-none focus:border-[var(--color-brand-accent)] transition-all"
+                disabled={isTyping}
+                placeholder={isTyping ? "AI is typing..." : "Ask me something..."}
+                className="flex-1 bg-[#fcfcfa] border border-[#e2e0d8] px-5 py-3.5 rounded-2xl text-sm outline-none focus:border-[var(--color-brand-accent)] transition-all disabled:opacity-50"
               />
-              <button type="submit" className="bg-[var(--color-brand-accent)] text-white p-3.5 rounded-2xl hover:bg-[var(--color-brand-accent-hover)] transition-all shadow-lg active:scale-95">
+              <button 
+                type="submit" 
+                disabled={isTyping || !input.trim()}
+                className="bg-[var(--color-brand-accent)] text-white p-3.5 rounded-2xl hover:bg-[var(--color-brand-accent-hover)] transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+              >
                 <Send size={20} />
               </button>
             </form>

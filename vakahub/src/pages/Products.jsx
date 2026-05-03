@@ -237,12 +237,14 @@ const Products = () => {
             <div className="h-64 relative overflow-hidden bg-[#f0eee4]">
               <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
               <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors"></div>
-              <div className="absolute top-4 left-4 bg-[#2c3b29] text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/20">
-                {p.category}
-              </div>
-              <div className="absolute top-4 left-24 bg-emerald-500/90 backdrop-blur text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center space-x-1 shadow-sm">
-                <CheckCircle size={10} />
-                <span>AI Verified</span>
+              <div className="absolute top-4 left-4 flex items-center space-x-2">
+                <div className="bg-[#2c3b29] text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/20 shadow-sm">
+                  {p.category}
+                </div>
+                <div className="bg-emerald-500/90 backdrop-blur text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center space-x-1 shadow-sm">
+                  <CheckCircle size={10} />
+                  <span>AI Verified</span>
+                </div>
               </div>
 
               
